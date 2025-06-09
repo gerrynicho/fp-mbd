@@ -2,6 +2,7 @@ CREATE TABLE PELANGGAN (
     id_pelanggan CHAR(5) PRIMARY KEY,
     nama VARCHAR(50) NOT NULL,
     no_telepon VARCHAR(15) NOT NULL,
+    pass VARCHAR(50) NOT NULL,
 );
 
 CREATE TABLE PROMOSI (
@@ -47,4 +48,69 @@ CREATE TABLE MEMBERSHIP (
     poin INT NOT NULL,
     pelanggan_id_pelanggan CHAR(5) NOT NULL,
     FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
+);
+
+CREATE TABLE TRANSAKSI (
+    id_transaksi CHAR(19) PRIMARY KEY,
+    tambahan_biaya DECIMAL(10, 2) NOT NULL,
+    pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
+);
+
+CREATE TABLE TEATER(
+    id_teater CHAR(5) PRIMARY KEY,
+    jumlah_kursi_tersedia INT NOT NULL,
+    lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
+    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+);
+
+CREATE TABLE JADWAL_TAYANG (
+    id_tayang CHAR(7) PRIMARY KEY,
+    jadwal DATETIME NOT NULL,
+    film_id_film CHAR(5) NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
+);
+
+CREATE TABLE MAKANAN_LOKASI_STUDIO (
+    makanan_id_makanan CHAR(5) NOT NULL,
+    lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
+    PRIMARY KEY (makanan_id_makanan, lokasi_studio_id_lokasi_studio),
+    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan),    
+    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+);
+
+CREATE TABLE TRANSAKSI_MAKANAN (
+    transaksi_id_transaksi CHAR(19) NOT NULL,
+    makanan_id_makanan CHAR(5) NOT NULL,
+    jumlah INT NOT NULL,
+    catatan VARCHAR(100),
+    PRIMARY KEY (transaksi_id_transaksi, makanan_id_makanan),
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
+    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan)
+);
+
+CREATE TABLE PROMOSI_TRANSAKSI(
+    transaksi_id_transaksi CHAR(19) NOT NULL,
+    promosi_id_promosi CHAR(10) NOT NULL,
+    PRIMARY KEY (transaksi_id_transaksi, promosi_id_promosi),
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
+    FOREIGN KEY (promosi_id_promosi) REFERENCES PROMOSI(id_promosi)
+);
+
+CREATE TABLE KURSI(
+    id_kursi CHAR(5) PRIMARY KEY,
+    row_kursi CHAR(1) NOT NULL,
+    column_kursi INT NOT NULL,
+    sedia BOOLEAN NOT NULL,
+    transaksi_id_transaksi CHAR(19) NOT NULL,
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi)
+);
+
+CREATE TABLE KURSI_JADWAL_TAYANG(
+    kursi_id_kursi CHAR(5) NOT NULL,
+    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
+    PRIMARY KEY (kursi_id_kursi, jadwal_tayang_id_tayang),
+    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi),
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang)
 );
