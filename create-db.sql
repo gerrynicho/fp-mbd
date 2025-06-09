@@ -11,7 +11,7 @@ CREATE TABLE PROMOSI (
     diskon DECIMAL(5, 2) NOT NULL,
     tanggal_mulai DATE NOT NULL,
     tanggal_berakhir DATE NOT NULL,
-    minimum_pembelian INT NOT NULL,
+     minimum_pembelian INT NOT NULL,
 );
 
 CREATE TABLE MAKANAN (
@@ -53,8 +53,10 @@ CREATE TABLE MEMBERSHIP (
 
 CREATE TABLE TRANSAKSI (
     id_transaksi CHAR(19) PRIMARY KEY,
-    tambahan_biaya DECIMAL(10, 2) NOT NULL,
+    total_biaya DECIMAL(10, 2) NOT NULL,
+    biaya_pajak DECIMAL(10, 2) NOT NULL,
     pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    tanggal TIMESTAMP NOT NULL DEFAULT CURDATE(),
     FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
 );
 
@@ -84,6 +86,7 @@ CREATE TABLE MAKANAN_LOKASI_STUDIO (
 CREATE TABLE TRANSAKSI_MAKANAN (
     transaksi_id_transaksi CHAR(19) NOT NULL,
     makanan_id_makanan CHAR(5) NOT NULL,
+    tanggal TIMESTAMP NOT NULL,
     jumlah INT NOT NULL,
     catatan VARCHAR(100),
     PRIMARY KEY (transaksi_id_transaksi, makanan_id_makanan),
