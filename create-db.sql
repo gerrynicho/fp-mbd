@@ -2,7 +2,7 @@ CREATE TABLE PELANGGAN (
     id_pelanggan CHAR(5) PRIMARY KEY,
     nama VARCHAR(50) NOT NULL,
     no_telepon VARCHAR(15) NOT NULL,
-    pass VARCHAR(50) NOT NULL,
+    pass VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE PROMOSI (
@@ -11,7 +11,7 @@ CREATE TABLE PROMOSI (
     diskon DECIMAL(5, 2) NOT NULL,
     tanggal_mulai DATE NOT NULL,
     tanggal_berakhir DATE NOT NULL,
-    minimum_pembelian INT NOT NULL,
+    minimum_pembelian INT NOT NULL
 );
 
 CREATE TABLE MAKANAN (
@@ -27,7 +27,7 @@ CREATE TABLE LOKASI_STUDIO (
     id_lokasi_studio CHAR(5) PRIMARY KEY,
     alamat_studio VARCHAR(100) NOT NULL,
     no_telp VARCHAR(15) NOT NULL,
-    merk_studio VARCHAR(30) NOT NULL,
+    merk_studio VARCHAR(30) NOT NULL
 );
 
 CREATE TABLE FILM (
@@ -38,7 +38,7 @@ CREATE TABLE FILM (
     sutradara VARCHAR(50) NOT NULL,
     rating_usia VARCHAR(30) NOT NULL,
     rating_film DECIMAL(4, 2) NOT NULL,
-    sinopsis VARCHAR(500) NOT NULL,
+    sinopsis VARCHAR(500) NOT NULL
 );
 
 CREATE TABLE MEMBERSHIP (
@@ -70,7 +70,7 @@ CREATE TABLE JADWAL_TAYANG (
     jadwal DATETIME NOT NULL,
     film_id_film CHAR(5) NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
+    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film)
 );
 
 CREATE TABLE MAKANAN_LOKASI_STUDIO (
