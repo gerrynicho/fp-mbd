@@ -1,3 +1,4 @@
+-- HITUNG PELANGGAN HARI INI
 DELIMITER $$
 -- 
 CREATE FUNCTION hitung_pelanggan_hari_ini(DATE current_date) 
@@ -17,3 +18,23 @@ BEGIN
 END
 $$
 DELIMITER ;
+
+-- CEK MEMBERSHIP PELANGGAN [DONE]
+DELIMITER //
+CREATE FUNCTION cek_membership(p_id CHAR(5))
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+    DECLARE status BOOL;
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = p_id
+    ) INTO status;
+    RETURN status;
+END;
+//
+DELIMITER ;
+-- SELECT cek_membership('P0001');
+-- SELECT cek_membership('P0021');
+
+--  Validasi Masa Berlaku Promosi
+
