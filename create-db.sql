@@ -72,7 +72,7 @@ CREATE TABLE JADWAL_TAYANG (
     jadwal DATETIME NOT NULL,
     film_id_film CHAR(5) NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film)
+    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
     FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
 );
 
