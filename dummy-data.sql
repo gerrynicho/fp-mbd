@@ -18,7 +18,37 @@ INSERT INTO PELANGGAN VALUES
 ('P0017', 'Salsa Anjani', '081234567817', 'anjani23'),
 ('P0018', 'Dian Prakoso', '081234567818', 'prakoso45'),
 ('P0019', 'Aldo Wirawan', '081234567819', 'aldo000'),
-('P0020', 'Kartika Dewi', '081234567820', 'kdewi56');
+('P0020', 'Kartika Dewi', '081234567820', 'kdewi56'),
+('P0021', 'Bima Adi', '081234567821', 'bima1234'),
+('P0022', 'Citra Lestari', '081234567822', 'citra789'),
+('P0023', 'Dimas Prabowo', '081234567823', 'dimas456'),
+('P0024', 'Eka Wulandari', '081234567824', 'eka321'),
+('P0025', 'Fani Suryani', '081234567825', 'fani654'),
+('P0026', 'Gilang Saputra', '081234567826', 'gilang789'),
+('P0027', 'Hanafi Setiawan', '081234567827', 'hanafi123'),
+('P0028', 'Intan Permata', '081234567828', 'intan456'),
+('P0029', 'Joko Santoso', '081234567829', 'joko7890'),
+('P0030', 'Kirana Ayu', '081234567830', 'kirana123'),
+('P0031', 'Larasati Pratiwi', '081234567831', 'larasati456'),
+('P0032', 'Maya Sari', '081234567832', 'maya789'),
+('P0033', 'Nanda Prasetya', '081234567833', 'nanda1234'),
+('P0034', 'Oki Wijaya', '081234567834', 'oki456'),
+('P0035', 'Putra Adi', '081234567835', 'putra7890'),
+('P0036', 'Qori Lestari', '081234567836', 'qori123'),
+('P0037', 'Rizky Kurniawan', '081234567837', 'rizky456'),
+('P0038', 'Siti Nurhaliza', '081234567838', 'siti789'),
+('P0039', 'Tari Anjani', '081234567839', 'tari1234'),
+('P0040', 'Umar Saputra', '081234567840', 'umar456'),
+('P0041', 'Vina Wulandari', '081234567841', 'vina7890'),
+('P0042', 'Wawan Setiawan', '081234567842', 'wawan123'),
+('P0043', 'Xena Prabowo', '081234567843', 'xena456'),
+('P0044', 'Yuni Sari', '081234567844', 'yuni789'),
+('P0045', 'Zaki Adi', '081234567845', 'zaki1234'),
+('P0046', 'Alya Permata', '081234567846', 'alya456'),
+('P0047', 'Bintang Prasetya', '081234567847', 'bintang7890'),
+('P0048', 'Cahya Lestari', '081234567848', 'cahya123'),
+('P0049', 'Dewanto Wijaya', '081234567849', 'dewanto456'),
+('P0050', 'Elisa Anjani', '081234567850', 'elisa789');
 
 INSERT INTO PROMOSI VALUES 
 ('PR001', 'Promo Awal Tahun', 10.00, '2025-01-01', '2025-01-31', 50000),
@@ -40,7 +70,8 @@ INSERT INTO PROMOSI VALUES
 ('PR017', 'Promo Akhir Tahun', 28.00, '2025-12-01', '2025-12-31', 95000),
 ('PR018', 'Voucher Ulang Tahun', 50.00, '2025-06-01', '2025-06-30', 60000),
 ('PR019', 'Diskon Partner', 20.00, '2025-04-01', '2025-05-01', 75000),
-('PR020', 'Diskon Mega Sale', 45.00, '2025-11-01', '2025-11-11', 100000);
+('PR020', 'Diskon Mega Sale', 45.00, '2025-11-01', '2025-11-11', 100000),
+
 
 INSERT INTO MAKANAN VALUES 
 ('M001', 15000.00, 'Popcorn Karamel', 'Makanan', 100, 'Popcorn manis dengan rasa karamel.'),
