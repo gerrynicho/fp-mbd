@@ -93,7 +93,17 @@ INSERT INTO MAKANAN VALUES
 ('M017', 14500.00, 'Kue Brownies', 'Camilan', 35, 'Brownies cokelat lembut.'),
 ('M018', 15500.00, 'Mochi Ice Cream', 'Camilan', 25, 'Es krim dalam balutan mochi.'),
 ('M019', 12500.00, 'Soda Cola', 'Minuman', 60, 'Minuman bersoda segar.'),
-('M020', 21000.00, 'Kopi Susu', 'Minuman', 70, 'Kopi susu kekinian.');
+('M020', 21000.00, 'Kopi Susu', 'Minuman', 70, 'Kopi susu kekinian.'),
+('M021', 14000.00, 'Churros Cinnamon', 'Camilan', 40, 'Camilan manis dengan taburan kayu manis'),
+('M022', 22500.00, 'Combo Family Pack', 'Makanan', 25, 'Paket popcorn jumbo dan 3 minuman'),
+('M023', 18000.00, 'Ice Cream Sundae', 'Camilan', 30, 'Es krim dengan topping coklat dan kacang'),
+('M024', 11500.00, 'Lemon Tea', 'Minuman', 65, 'Teh lemon dingin yang menyegarkan'),
+('M025', 9000.00, 'Mineral Water Large', 'Minuman', 120, 'Air mineral kemasan besar'),
+('M026', 25000.00, 'Pizza Mini', 'Makanan', 20, 'Pizza kecil dengan topping keju mozarella'),
+('M027', 17500.00, 'French Fries Cheese', 'Makanan', 40, 'Kentang goreng dengan saus keju'),
+('M028', 13500.00, 'Chocolate Milkshake', 'Minuman', 35, 'Minuman coklat susu kental'),
+('M029', 16000.00, 'Caramel Pudding', 'Camilan', 25, 'Puding lembut dengan saus karamel'),
+('M030', 19500.00, 'Chicken Wings', 'Makanan', 30, 'Sayap ayam pedas manis dengan saus BBQ');
 
 INSERT INTO LOKASI_STUDIO VALUES 
 ('L001', 'Jl. Merdeka No.1, Jakarta', '0211234567', 'CineMax'),
@@ -137,7 +147,17 @@ INSERT INTO FILM VALUES
 ('F017', 'Operasi Tangkap Tangan', 'Action', 115, 'Andi Susanto', '17+', 8.1, 'Operasi rahasia membongkar korupsi besar.'),
 ('F018', 'Di Balik Kabut', 'Mystery', 105, 'Rina Kartika', '13+', 7.3, 'Kejadian aneh di desa yang diselimuti kabut.'),
 ('F019', 'Adu Nasib', 'Drama', 120, 'Wawan Setiawan', '13+', 7.2, 'Dua sahabat bersaing untuk sukses.'),
-('F020', 'Perang Dunia 4', 'Sci-Fi', 130, 'Gunawan Budi', '17+', 8.6, 'Bumi menghadapi kehancuran total dari alien.');
+('F020', 'Perang Dunia 4', 'Sci-Fi', 130, 'Gunawan Budi', '17+', 8.6, 'Bumi menghadapi kehancuran total dari alien.'),
+('F021', 'Sang Pahlawan Terakhir', 'Action', 125, 'Bambang Surya', '13+', 8.2, 'Kisah heroik seorang pahlawan di masa perang'),
+('F022', 'Mimpi Seribu Malam', 'Fantasy', 115, 'Dinda Kusuma', 'SU', 7.9, 'Petualangan fantasi di dunia mimpi tanpa batas'),
+('F023', 'Detektif Jalanan', 'Crime', 110, 'Iman Perdana', '17+', 8.0, 'Detektif amatir memecahkan kasus pembunuhan misterius'),
+('F024', 'Surat untuk Bintang', 'Romance', 105, 'Lidya Cantika', '13+', 7.6, 'Kisah cinta yang bermula dari surat tak bertuan'),
+('F025', 'Lompatan Quantum', 'Sci-Fi', 140, 'Reza Mahardika', '13+', 8.4, 'Petualangan melompati dimensi ruang dan waktu'),
+('F026', 'Stand Up Komedi', 'Comedy', 95, 'Tora Sudiro', 'SU', 8.7, 'Kumpulan lelucon dari komedian terbaik Indonesia'),
+('F027', 'Rumah Angker Nenek', 'Horror', 100, 'Dian Sastro', '17+', 7.2, 'Teror mencekam di rumah peninggalan nenek'),
+('F028', 'Jelajah Indonesia', 'Documentary', 120, 'Riri Riza', 'SU', 8.3, 'Dokumenter keindahan alam dan budaya nusantara'),
+('F029', 'Pendekar Bayangan', 'Martial Arts', 130, 'Joe Taslim', '13+', 8.5, 'Pertarungan seni bela diri untuk membalaskan dendam'),
+('F030', 'Melodi Hati', 'Musical', 110, 'Raisa Andriana', 'SU', 7.8, 'Kisah cinta yang diceritakan melalui lagu dan tarian');
 
 -- 1. MEMBERSHIP (20 pelanggan, random poin & tanggal_lahir)
 INSERT INTO MEMBERSHIP VALUES
@@ -150,7 +170,8 @@ INSERT INTO MEMBERSHIP VALUES
 ('M0007','intan@contoh.com','P','1994-04-04', 30,'P0007'),
 ('M0008','tono@contoh.com','L','1989-06-20', 110,'P0008'),
 ('M0009','lina@contoh.com','P','1990-08-08', 60,'P0009'),
-('M0010','rudi@contoh.com','L','1987-03-15', 75,'P0010'),
+('M0010','rudi@contoh.com','L','1987-03-15', 75,'P0010');
+
 -- ('M0011','ayu@contoh.com','P','1995-01-25', 180,'P0011'),
 -- ('M0012','fajar@contoh.com','L','1992-10-10', 55,'P0012'),
 -- ('M0013','nina@contoh.com','P','1993-12-12', 130,'P0013'),
@@ -169,6 +190,11 @@ INSERT INTO TEATER VALUES
 ('T003',100,'L006'),
 ('T004',130,'L004'),
 ('T005',110,'L006');
+('T006',180, 'L003'),
+('T007',90, 'L004'),
+('T008',140, 'L005'),
+('T009',120, 'L008'),
+('T010',200, 'L009');
 
 -- 3. JADWAL_TAYANG (10 jadwal film)
 INSERT INTO JADWAL_TAYANG VALUES
@@ -181,7 +207,17 @@ INSERT INTO JADWAL_TAYANG VALUES
 ('J007','2025-06-15 18:00:00','F007','T002'),
 ('J008','2025-06-16 20:30:00','F008','T003'),
 ('J009','2025-06-17 14:30:00','F009','T004'),
-('J010','2025-06-18 19:30:00','F010','T005');
+('J010','2025-06-18 19:30:00','F010','T005'),
+('J011','2025-06-19 13:45:00', 'F011', 'T001'),
+('J012','2025-06-19 16:15:00', 'F012', 'T002'),
+('J013','2025-06-20 14:30:00', 'F013', 'T003'),
+('J014','2025-06-20 19:45:00', 'F014', 'T004'),
+('J015','2025-06-21 12:30:00', 'F015', 'T005'),
+('J016','2025-06-21 17:00:00', 'F016', 'T006'),
+('J017','2025-06-22 15:30:00', 'F017', 'T007'),
+('J018','2025-06-22 20:00:00', 'F018', 'T008'),
+('J019','2025-06-23 14:15:00', 'F019', 'T009'),
+('J020','2025-06-23 18:45:00', 'F020', 'T010');
 
 -- 4. MAKANAN_LOKASI_STUDIO (setiap studio sediakan sebagian menu)
 INSERT INTO MAKANAN_LOKASI_STUDIO VALUES
@@ -191,7 +227,14 @@ INSERT INTO MAKANAN_LOKASI_STUDIO VALUES
 ('M009','L004'),('M010','L004'),
 ('M011','L003'),('M012','L003'),
 ('M013','L005'),('M014','L005'),
-('M015','L001'),('M016','L006');
+('M015','L001'),('M016','L006'),
+('M017', 'L001'), ('M018', 'L001'),
+('M019', 'L002'), ('M020', 'L002'),
+('M021', 'L003'), ('M022', 'L003'),
+('M023', 'L004'), ('M024', 'L004'),
+('M025', 'L005'), ('M026', 'L005'),
+('M027', 'L006'), ('M028', 'L006'),
+('M029', 'L008'), ('M030', 'L009');
 
 -- 5. TRANSAKSI (5 transaksi contoh)
 INSERT INTO TRANSAKSI VALUES
@@ -199,7 +242,12 @@ INSERT INTO TRANSAKSI VALUES
 ('TRX202506100002',150000,15000,'P0002','2025-06-10 11:00:00'),
 ('TRX202506110001',100000,10000,'P0004','2025-06-11 12:00:00'),
 ('TRX202506120001',250000,25000,'P0005','2025-06-12 13:00:00'),
-('TRX202506130001',180000,18000,'P0008','2025-06-13 14:00:00');
+('TRX202506130001',180000,18000,'P0008','2025-06-13 14:00:00'),
+('TRX202506140001', 220000, 22000, 'P0003', '2025-06-14 09:30:00'),
+('TRX202506150001', 175000, 17500, 'P0006', '2025-06-15 10:45:00'),
+('TRX202506160001', 195000, 19500, 'P0007', '2025-06-16 13:20:00'),
+('TRX202506160002', 280000, 28000, 'P0009', '2025-06-16 15:10:00'),
+('TRX202506170001', 240000, 24000, 'P0010', '2025-06-17 11:30:00');
 
 -- 6. TRANSAKSI_MAKANAN (menu dipilih, jumlah)
 INSERT INTO TRANSAKSI_MAKANAN VALUES
@@ -209,7 +257,16 @@ INSERT INTO TRANSAKSI_MAKANAN VALUES
 ('TRX202506100002','M005','2025-06-10 11:10:00',2,''),
 ('TRX202506110001','M003','2025-06-11 12:20:00',1,'extra saus'),
 ('TRX202506120001','M006','2025-06-12 13:30:00',3,'pedas'),
-('TRX202506130001','M007','2025-06-13 14:25:00',2,'');
+('TRX202506130001','M007','2025-06-13 14:25:00',2,''),
+('TRX202506140001', 'M008', '2025-06-14 09:45:00', 2, 'extra cheese'),
+('TRX202506140001', 'M010', '2025-06-14 09:45:00', 2, 'less ice'),
+('TRX202506150001', 'M015', '2025-06-15 11:00:00', 1, ''),
+('TRX202506150001', 'M020', '2025-06-15 11:00:00', 1, 'extra hot'),
+('TRX202506160001', 'M021', '2025-06-16 13:25:00', 3, 'extra sugar'),
+('TRX202506160002', 'M022', '2025-06-16 15:15:00', 1, ''),
+('TRX202506160002', 'M023', '2025-06-16 15:15:00', 2, 'no nuts'),
+('TRX202506170001', 'M026', '2025-06-17 11:40:00', 2, 'extra cheese'),
+('TRX202506170001', 'M028', '2025-06-17 11:40:00', 3, '');
 
 -- 7. PROMOSI_TRANSAKSI (promosi terpakai)
 INSERT INTO PROMOSI_TRANSAKSI VALUES
@@ -226,7 +283,17 @@ INSERT INTO KURSI VALUES
 ('K003','B',5,1,'TRX202506100002'),
 ('K004','C',3,1,'TRX202506110001'),
 ('K005','D',4,1,'TRX202506120001'),
-('K006','E',7,1,'TRX202506130001');
+('K006','E',7,1,'TRX202506130001'),
+('K007', 'B', 3, 1, 'TRX202506140001'),
+('K008', 'B', 4, 1, 'TRX202506140001'),
+('K009', 'C', 5, 1, 'TRX202506150001'),
+('K010', 'C', 6, 1, 'TRX202506150001'),
+('K011', 'D', 7, 1, 'TRX202506160001'),
+('K012', 'D', 8, 1, 'TRX202506160001'),
+('K013', 'F', 10, 1, 'TRX202506160002'),
+('K014', 'F', 11, 1, 'TRX202506160002'),
+('K015', 'G', 9, 1, 'TRX202506170001'),
+('K016', 'G', 10, 1, 'TRX202506170001');
 
 -- 9. KURSI_JADWAL_TAYANG (kursi dipesan terkait jadwal)
 INSERT INTO KURSI_JADWAL_TAYANG VALUES
@@ -235,4 +302,14 @@ INSERT INTO KURSI_JADWAL_TAYANG VALUES
 ('K003','J002'),
 ('K004','J003'),
 ('K005','J004'),
-('K006','J005');
+('K006','J005'),
+('K007', 'J006'),
+('K008', 'J006'),
+('K009', 'J007'),
+('K010', 'J007'),
+('K011', 'J008'),
+('K012', 'J008'),
+('K013', 'J009'),
+('K014', 'J009'),
+('K015', 'J010'),
+('K016', 'J010');
