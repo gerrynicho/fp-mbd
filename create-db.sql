@@ -119,3 +119,12 @@ CREATE TABLE KURSI_JADWAL_TAYANG(
     FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi),
     FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang)
 );
+
+CREATE TABLE log_notifikasi (
+    id_notif INT AUTO_INCREMENT PRIMARY KEY,
+    id_makanan VARCHAR(20),
+    tipe_notif ENUM('ERROR', 'NOTICE'),
+    pesan TEXT,
+    waktu DATETIME
+);
+
