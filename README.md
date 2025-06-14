@@ -248,10 +248,127 @@ Menyisipkan data ke tabel `transaksi`, `transaksi_makanan`, `promosi_transaksi` 
 Mengembalikan daftar makanan yang tersedia di lokasi studio tertentu.
 
 ### 6. Studio Menayangkan Film Apa Saja
-Mengembalikan daftar film yang sedang tayang di studio tertentu.
+Mengembalikan daftar film yang sedang tayang oleh merk studio tertentu.
+
+```
+DELIMITER $$
+
+CREATE PROCEDURE studio_menayangkan_film_apa_saja(
+    IN merk_studio_input VARCHAR(30)
+)
+BEGIN
+    SELECT DISTINCT
+        F.id_film,
+        F.judul_film,
+        F.genre,
+        F.durasi,
+        F.rating_usia,
+        F.rating_film,
+        L.merk_studio,
+        L.alamat_studio
+    FROM JADWAL_TAYANG JT
+    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
+    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+    JOIN FILM F ON JT.film_id_film = F.id_film
+    WHERE L.merk_studio = merk_studio_input
+    ORDER BY F.judul_film;
+END$$
+
+DELIMITER ;
+```
+
+Input data yang diperlukan untuk testing
+
+```
+INSERT INTO LOKASI_STUDIO VALUES
+('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
+('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+
+INSERT INTO TEATER VALUES
+('T001', 100, 'L001'),
+('T002', 80, 'L001'),
+('T003', 120, 'L002');
+
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
+('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
+('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+
+INSERT INTO JADWAL_TAYANG VALUES
+('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
+('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
+('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
+('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
+('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+```
+
+Call procedure untuk menampilkan film yang ada di XXI
+
+```
+CALL studio_menayangkan_film_apa_saja('XXI');
+```
+
+![image](https://github.com/user-attachments/assets/7218a66e-c037-4c42-b460-71dbd4af9fab)
 
 ### 7. Teater Tempat Film Ditayangkan
 Menentukan film tertentu ditayangkan di teater mana dalam satu studio.
+
+```
+DELIMITER $$
+
+CREATE PROCEDURE teater_tempat_film_ditayangkan(
+    IN id_film CHAR(5),
+    IN id_lokasi_studio CHAR(5)
+)
+BEGIN
+    SELECT DISTINCT 
+        T.id_teater,
+        T.jumlah_kursi_tersedia,
+        L.alamat_studio,
+        L.merk_studio
+    FROM JADWAL_TAYANG JT
+    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
+    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+    WHERE JT.film_id_film = id_film
+      AND T.lokasi_studio_id_lokasi_studio = id_lokasi_studio;
+END$$
+
+DELIMITER ;
+```
+
+Input data yang diperlukan untuk testing
+
+```
+INSERT INTO LOKASI_STUDIO VALUES
+('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
+('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+
+INSERT INTO TEATER VALUES
+('T001', 100, 'L001'),
+('T002', 80, 'L001'),
+('T003', 120, 'L002');
+
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
+('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
+('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+
+INSERT INTO JADWAL_TAYANG VALUES
+('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
+('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
+('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
+('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
+('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+```
+
+Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi L001
+
+```
+CALL teater_tempat_film_ditayangkan('F001', 'L001');
+```
+
+![image](https://github.com/user-attachments/assets/f8d51a99-6939-4bb8-a4b5-4677d08943da)
+
 
 ### 8. Jadwal Tayang di Studio Tertentu
 Menampilkan waktu tayang suatu film di lokasi studio tertentu pada tanggal tertentu.
