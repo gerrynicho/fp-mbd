@@ -116,9 +116,9 @@ SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0001';
 SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0002';
 ```
 
-![Screenshot 2025-06-14 155117](https://github.com/user-attachments/assets/a001b360-e88e-4694-8808-ca44084a7b4d)
+![image](https://github.com/user-attachments/assets/74150003-00cc-4736-bad9-3cb573e6a91e)
 
-![Screenshot 2025-06-14 161607](https://github.com/user-attachments/assets/34a2ca89-3719-481b-8bfd-357521044dc3)
+![image](https://github.com/user-attachments/assets/ce90a4c5-7642-40d7-8298-a62d9b9665ad)
 
 ### 5. Kursi Kosong saat Film Selesai
 Trigger mengubah status kursi menjadi tersedia (`true`) setelah waktu selesai film.
@@ -182,7 +182,8 @@ WHERE id_kursi = 'K001';
 
 Status kursi akan menjadi FALSE
 
-![Screenshot 2025-06-14 160111](https://github.com/user-attachments/assets/0e940a9e-a732-4661-8424-e4569e9e39f0)
+![image](https://github.com/user-attachments/assets/b42cb384-a4cf-4e07-95c2-fc1961d36a59)
+
 
 ---
 
