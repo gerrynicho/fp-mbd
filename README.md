@@ -1,3 +1,45 @@
+# Table of Contents
+- [Table of Contents](#table-of-contents)
+- [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
+  - [🧠 Function](#-function)
+    - [1. Cek Membership Pelanggan](#1-cek-membership-pelanggan)
+    - [2. Validasi Masa Berlaku Promosi](#2-validasi-masa-berlaku-promosi)
+    - [3. Hitung Total Penggunaan Promosi](#3-hitung-total-penggunaan-promosi)
+    - [4. Kalkulasi Harga Setelah Promo](#4-kalkulasi-harga-setelah-promo)
+    - [5. Kalkulasi Harga Makanan dalam Keranjang](#5-kalkulasi-harga-makanan-dalam-keranjang)
+    - [6. Kembalikan Stok Makanan](#6-kembalikan-stok-makanan)
+    - [7. Cek Poin untuk Free Tiket](#7-cek-poin-untuk-free-tiket)
+    - [8. Konversi Total Harga Menjadi Poin](#8-konversi-total-harga-menjadi-poin)
+    - [9. Hitung Pajak](#9-hitung-pajak)
+    - [10. Hitung Refund Pembatalan](#10-hitung-refund-pembatalan)
+    - [11. Hitung Total Transaksi](#11-hitung-total-transaksi)
+    - [12. Hitung Harga Kursi](#12-hitung-harga-kursi)
+  - [⚡ Trigger](#-trigger)
+    - [1. Promosi untuk 10 Orang Pertama per Hari](#1-promosi-untuk-10-orang-pertama-per-hari)
+    - [2. Trigger Stok Menipis](#2-trigger-stok-menipis)
+    - [3. Diskon Tambahan untuk Membership](#3-diskon-tambahan-untuk-membership)
+    - [4. Tambah Poin saat Transaksi](#4-tambah-poin-saat-transaksi)
+    - [5. Kursi Kosong saat Film Selesai](#5-kursi-kosong-saat-film-selesai)
+    - [6. Auto Kosongkan Kursi saat Dipesan](#6-auto-kosongkan-kursi-saat-dipesan)
+  - [🧩 Stored Procedure](#-stored-procedure)
+    - [1. Top 3 Makanan Terlaris per Kategori](#1-top-3-makanan-terlaris-per-kategori)
+    - [2. Film Paling Populer](#2-film-paling-populer)
+    - [3. Pelanggan dengan Transaksi Terbanyak](#3-pelanggan-dengan-transaksi-terbanyak)
+    - [4. Prosedur Transaksi Lengkap](#4-prosedur-transaksi-lengkap)
+    - [5. Studio Menjual Makanan Apa Saja](#5-studio-menjual-makanan-apa-saja)
+    - [6. Studio Menayangkan Film Apa Saja](#6-studio-menayangkan-film-apa-saja)
+    - [7. Teater Tempat Film Ditayangkan](#7-teater-tempat-film-ditayangkan)
+    - [8. Jadwal Tayang di Studio Tertentu](#8-jadwal-tayang-di-studio-tertentu)
+    - [9. Film Tersedia Berdasarkan Tanggal dan Lokasi](#9-film-tersedia-berdasarkan-tanggal-dan-lokasi)
+    - [10. Pembatalan Transaksi](#10-pembatalan-transaksi)
+    - [11. Edit Transaksi (Pindah Kursi/Jadwal)](#11-edit-transaksi-pindah-kursijadwal)
+  - [🗂️ Index](#️-index)
+    - [📁 Table: `Film`](#-table-film)
+    - [📁 Table: `Jadwal_Tayang`](#-table-jadwal_tayang)
+    - [📁 Table: `Kursi`](#-table-kursi)
+    - [📁 Table: `Lokasi_Studio`](#-table-lokasi_studio)
+    - [📁 Table: `Pelanggan`](#-table-pelanggan)
+  
 # 🎬 Bioskop Database Design – Fitur & Indexing
 
 ## 🧠 Function
@@ -54,7 +96,7 @@ Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
 ### 4. Tambah Poin saat Transaksi
 Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
 
-```
+```sql
 DELIMITER $$
 
 CREATE TRIGGER tambah_poin_setelah_transaksi
@@ -85,7 +127,7 @@ DELIMITER ;
 
 Input data yang diperluhkan untuk testing
 
-```
+```sql
 INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
 VALUES ('P0001', 'Budi', '081234567890', 'pass123');
 INSERT INTO MEMBERSHIP (id_membership, email, jenis_kelamin, tanggal_lahir, poin, pelanggan_id_pelanggan)
@@ -96,7 +138,7 @@ VALUES ('P0002', 'Siti', '089876543210', 'pass456');
 
 Testing
 
-```
+```sql
 INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
 VALUES ('TRX000000000000001', 45000.00, 4500.00, 'P0001');
 INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
@@ -111,7 +153,7 @@ P0002 tidak memiliki poin karena dia tidak memiliki membership
 
 Cek
 
-```
+```sql
 SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0001';
 SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0002';
 ```
@@ -126,7 +168,7 @@ Trigger mengubah status kursi menjadi tersedia (`true`) setelah waktu selesai fi
 ### 6. Auto Kosongkan Kursi saat Dipesan
 Saat pelanggan memesan, status kursi diubah menjadi tidak tersedia (`false`).
 
-```
+```sql
 DELIMITER $$
 
 CREATE TRIGGER kosongkan_kursi_saat_dipesan
@@ -143,7 +185,7 @@ DELIMITER ;
 
 Data yang diperlukan untuk testing
 
-```
+```sql
 INSERT INTO KURSI (id_kursi, row_kursi, column_kursi, sedia, transaksi_id_transaksi)
 VALUES ('K001', 'A', 1, TRUE, 'TRX000000000000001');
 INSERT INTO FILM (
@@ -167,14 +209,14 @@ VALUES ('JT00001', '2025-06-14 15:00:00', 'F0001', 'T0001');
 
 Testing
 
-```
+```sql
 INSERT INTO KURSI_JADWAL_TAYANG (kursi_id_kursi, jadwal_tayang_id_tayang)
 VALUES ('K001', 'JT00001');
 ```
 
 Cek
 
-```
+```sql
 SELECT id_kursi, sedia
 FROM KURSI
 WHERE id_kursi = 'K001';
