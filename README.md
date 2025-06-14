@@ -52,13 +52,137 @@ Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
 
 ### 4. Tambah Poin saat Transaksi
-Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi.
+Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
+
+```
+DELIMITER $$
+
+CREATE TRIGGER tambah_poin_setelah_transaksi
+AFTER INSERT ON TRANSAKSI
+FOR EACH ROW
+BEGIN
+    DECLARE tambahan_poin INT;
+    DECLARE jumlah_membership INT;
+
+    -- Cek apakah pelanggan punya akun membership
+    SELECT COUNT(*) INTO jumlah_membership
+    FROM MEMBERSHIP
+    WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
+
+    -- Jika punya membership dan total biaya >= 10000
+    IF jumlah_membership > 0 AND NEW.total_biaya >= 10000 THEN
+        SET tambahan_poin = FLOOR(NEW.total_biaya / 10000);
+
+        -- Update poin pelanggan
+        UPDATE MEMBERSHIP
+        SET poin = poin + tambahan_poin
+        WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
+    END IF;
+END$$
+
+DELIMITER ;
+```
+
+Input data yang diperluhkan untuk testing
+
+```
+INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
+VALUES ('P0001', 'Budi', '081234567890', 'pass123');
+INSERT INTO MEMBERSHIP (id_membership, email, jenis_kelamin, tanggal_lahir, poin, pelanggan_id_pelanggan)
+VALUES ('M0001', 'budi@email.com', 'L', '2000-01-01', 0, 'P0001');
+INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
+VALUES ('P0002', 'Siti', '089876543210', 'pass456');
+```
+
+Testing
+
+```
+INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
+VALUES ('TRX000000000000001', 45000.00, 4500.00, 'P0001');
+INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
+VALUES ('TRX000000000000002', 60000.00, 6000.00, 'P0002');
+INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
+VALUES ('TRX000000000000003', 8000.00, 800.00, 'P0001');
+```
+
+P0001 akan mempunyai 4 poin karena dia memiliki membership dan mengeluarkan biaya lebih dari 10.000
+
+P0002 tidak memiliki poin karena dia tidak memiliki membership
+
+Cek
+
+```
+SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0001';
+SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0002';
+```
+
+![Screenshot 2025-06-14 155117](https://github.com/user-attachments/assets/a001b360-e88e-4694-8808-ca44084a7b4d)
+
+![Screenshot 2025-06-14 161607](https://github.com/user-attachments/assets/34a2ca89-3719-481b-8bfd-357521044dc3)
 
 ### 5. Kursi Kosong saat Film Selesai
 Trigger mengubah status kursi menjadi tersedia (`true`) setelah waktu selesai film.
 
 ### 6. Auto Kosongkan Kursi saat Dipesan
 Saat pelanggan memesan, status kursi diubah menjadi tidak tersedia (`false`).
+
+```
+DELIMITER $$
+
+CREATE TRIGGER kosongkan_kursi_saat_dipesan
+AFTER INSERT ON KURSI_JADWAL_TAYANG
+FOR EACH ROW
+BEGIN
+    UPDATE KURSI
+    SET sedia = FALSE
+    WHERE id_kursi = NEW.kursi_id_kursi;
+END$$
+
+DELIMITER ;
+```
+
+Data yang diperlukan untuk testing
+
+```
+INSERT INTO KURSI (id_kursi, row_kursi, column_kursi, sedia, transaksi_id_transaksi)
+VALUES ('K001', 'A', 1, TRUE, 'TRX000000000000001');
+INSERT INTO FILM (
+    id_film, judul_film, genre, durasi, sutradara, rating_usia, rating_film, sinopsis
+) VALUES (
+    'F0001', 'Petualangan Si Kancil', 'Animasi', 90, 'Agus Salim', 'Semua Umur', 8.5, 'Cerita seru tentang petualangan seekor kancil menyelamatkan hutan.'
+);
+INSERT INTO LOKASI_STUDIO (
+    id_lokasi_studio, alamat_studio, no_telp, merk_studio
+) VALUES (
+    'L0001', 'Jl. Sudirman No. 99, Jakarta', '021888999', 'XXI Plaza'
+);
+INSERT INTO TEATER (
+    id_teater, jumlah_kursi_tersedia, lokasi_studio_id_lokasi_studio
+) VALUES (
+    'T0001', 100, 'L0001'
+);
+INSERT INTO JADWAL_TAYANG (id_tayang, jadwal, film_id_film, teater_id_teater)
+VALUES ('JT00001', '2025-06-14 15:00:00', 'F0001', 'T0001');
+```
+
+Testing
+
+```
+INSERT INTO KURSI_JADWAL_TAYANG (kursi_id_kursi, jadwal_tayang_id_tayang)
+VALUES ('K001', 'JT00001');
+```
+
+Cek
+
+```
+SELECT id_kursi, sedia
+FROM KURSI
+WHERE id_kursi = 'K001';
+```
+
+Status kursi akan menjadi FALSE
+
+![Screenshot 2025-06-14 160111](https://github.com/user-attachments/assets/0e940a9e-a732-4661-8424-e4569e9e39f0)
 
 ---
 
@@ -71,6 +195,7 @@ Mengembalikan 3 makanan dengan jumlah penjualan tertinggi di tiap kategori (minu
 Mengembalikan film dengan jumlah penonton terbanyak (berdasarkan transaksi tiket).
 
 ### 3. Pelanggan dengan Transaksi Terbanyak
+
 Mengambil pelanggan dengan jumlah transaksi terbanyak sepanjang waktu.
 
 ### 4. Prosedur Transaksi Lengkap
