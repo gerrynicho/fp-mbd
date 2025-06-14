@@ -254,7 +254,68 @@ Mengembalikan daftar film yang sedang tayang di studio tertentu.
 Menentukan film tertentu ditayangkan di teater mana dalam satu studio.
 
 ### 8. Jadwal Tayang di Studio Tertentu
-Menampilkan waktu tayang suatu film di studio tertentu.
+Menampilkan waktu tayang suatu film di lokasi studio tertentu pada tanggal tertentu.
+
+```
+DELIMITER $$
+
+CREATE PROCEDURE jadwal_tayang_film_studio_tanggal(
+    IN id_film CHAR(5),
+    IN id_lokasi_studio CHAR(5),
+    IN tanggal_tayang DATE
+)
+BEGIN
+    SELECT 
+        JT.id_tayang,
+        F.judul_film,
+        T.id_teater,
+        L.alamat_studio,
+        JT.jadwal
+    FROM JADWAL_TAYANG JT
+    JOIN FILM F ON JT.film_id_film = F.id_film
+    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
+    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+    WHERE F.id_film = id_film
+      AND L.id_lokasi_studio = id_lokasi_studio
+      AND DATE(JT.jadwal) = tanggal_tayang
+    ORDER BY JT.jadwal ASC;
+END$$
+
+DELIMITER ;
+```
+
+Input data yang diperlukan untuk testing
+
+```
+INSERT INTO LOKASI_STUDIO VALUES
+('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
+('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+
+INSERT INTO TEATER VALUES
+('T001', 100, 'L001'),
+('T002', 80, 'L001'),
+('T003', 120, 'L002');
+
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
+('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
+('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+
+INSERT INTO JADWAL_TAYANG VALUES
+('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
+('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
+('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
+('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
+('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+```
+
+Call procedure untuk jadwal dari film F001 di lokasi L001 pada tanggal 2025-06-16
+
+```
+CALL jadwal_tayang_film_studio_tanggal('F001', 'L001', '2025-06-16');
+```
+
+![image](https://github.com/user-attachments/assets/f2029600-5357-4305-9e51-22491453e910)
 
 ### 9. Film Tersedia Berdasarkan Tanggal dan Lokasi
 Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipilih.
