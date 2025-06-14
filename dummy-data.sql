@@ -70,8 +70,7 @@ INSERT INTO PROMOSI VALUES
 ('PR017', 'Promo Akhir Tahun', 28.00, '2025-12-01', '2025-12-31', 95000),
 ('PR018', 'Voucher Ulang Tahun', 50.00, '2025-06-01', '2025-06-30', 60000),
 ('PR019', 'Diskon Partner', 20.00, '2025-04-01', '2025-05-01', 75000),
-('PR020', 'Diskon Mega Sale', 45.00, '2025-11-01', '2025-11-11', 100000),
-
+('PR020', 'Diskon Mega Sale', 45.00, '2025-11-01', '2025-11-11', 100000);
 
 INSERT INTO MAKANAN VALUES 
 ('M001', 15000.00, 'Popcorn Karamel', 'Makanan', 100, 'Popcorn manis dengan rasa karamel.'),
@@ -189,7 +188,7 @@ INSERT INTO TEATER VALUES
 ('T002',120,'L002'),
 ('T003',100,'L006'),
 ('T004',130,'L004'),
-('T005',110,'L006');
+('T005',110,'L006'),
 ('T006',180, 'L003'),
 ('T007',90, 'L004'),
 ('T008',140, 'L005'),
