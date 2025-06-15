@@ -22,8 +22,10 @@ DELIMITER ;
 -- #1 CEK MEMBERSHIP PELANGGAN [DONE]
 DELIMITER //
 CREATE FUNCTION cek_membership(p_id CHAR(5))
+-- gk bisa deterministic gara" bisa aja function call before bikin membership baru
+-- trus pas user bikin membership
+-- function ini klo deterministic bakal kasi info salah
 RETURNS BOOLEAN
-DETERMINISTIC
 BEGIN
     DECLARE status BOOL;
     SELECT EXISTS (
@@ -37,14 +39,13 @@ DELIMITER ;
 -- SELECT cek_membership('P0021');
 
 --  #2 CEK MASA BERLAKU MEMBERSHIP [TENTATIVE]
-
 DELIMITER //
 CREATE FUNCTION promosi_masih_berlaku(p_id CHAR(10))
+-- gk bisa deterministic karena tergantung tanggal saat ini
 RETURNS BOOLEAN
-DETERMINISTIC
 BEGIN
     DECLARE status BOOL;
-    SELECT CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir
+    SELECT ( CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir )
     INTO status
     FROM PROMOSI
     WHERE id_promosi = p_id;
@@ -57,11 +58,11 @@ DELIMITER ;
 -- SELECT promosi_masih_berlaku('PR014');
 
 -- #3 Hitung Total Penggunaan Promosi [DONE]
-
 DELIMITER //
 CREATE FUNCTION total_penggunaan_promosi(p_id CHAR(10))
+-- gk bisa deterministiic gara" bisa aja ada transaksi baru
+-- yang menggunakan promosi ini
 RETURNS INT
-DETERMINISTIC
 BEGIN
     DECLARE total INT;
     SELECT COUNT(*) INTO total
@@ -73,15 +74,15 @@ END;
 DELIMITER ;
 
 
-SELECT total_penggunaan_promosi('PR001');
-SELECT total_penggunaan_promosi('PR014');
+-- SELECT total_penggunaan_promosi('PR001');
+-- SELECT total_penggunaan_promosi('PR014');
 
 
 --- #4. Kalkulasi Harga Setelah Promo [DONE]
 DELIMITER //
 CREATE FUNCTION harga_setelah_diskon(harga DECIMAL(10,2), diskon DECIMAL(5,2))
 RETURNS DECIMAL(10,2)
-DETERMINISTIC
+DETERMINISTIC -- deterministic gara" cuma basic math operation
 BEGIN
     RETURN harga - (harga * diskon / 100);
 END;
@@ -95,8 +96,8 @@ DELIMITER ;
 
 DELIMITER //
 CREATE FUNCTION total_harga_keranjang(p_transaksi CHAR(19))
+DETERMINISTIC -- determministic gara" transaksi gk bakal berubah
 RETURNS DECIMAL(10,2)
-DETERMINISTIC
 BEGIN
     DECLARE total DECIMAL(10,2);
     SELECT SUM(m.harga * tm.jumlah)
@@ -119,7 +120,6 @@ DELIMITER ;
 DELIMITER //
 CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
 RETURNS INT
-DETERMINISTIC
 BEGIN
     DECLARE poin INT DEFAULT 0;
 
@@ -149,7 +149,7 @@ END;
 //
 DELIMITER ;
 
-SELECT harga_ke_poin(126000); -- Hasil: 5
+-- SELECT harga_ke_poin(126000); -- Hasil: 5
 
 -- #9, Hitung Pajak
 -- Menambahkan pajak (misal 10%) dari subtotal transaksi.
@@ -185,11 +185,11 @@ DELIMITER ;
 -- Menjumlahkan subtotal, pajak, biaya admin, dan dikurangi diskon jika ada.
 
 DELIMITER //
-CREATE FUNCTION hitung_total(subtotal DECIMAL(10,2), pajak DECIMAL(10,2), admin DECIMAL(10,2), diskon DECIMAL(10,2))
+CREATE FUNCTION hitung_total(subtotal DECIMAL(10,2), pajak DECIMAL(10,2), biaya_admin DECIMAL(10,2), diskon DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
-    RETURN subtotal + pajak + admin - diskon;
+    RETURN subtotal + pajak + biaya_admin - diskon;
 END;
 //
 DELIMITER ;
@@ -201,11 +201,11 @@ DELIMITER ;
 -- Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 DELIMITER //
-CREATE FUNCTION harga_kursi(jumlah INT, harga_per_kursi DECIMAL(10,2))
+CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
-    RETURN jumlah * harga_per_kursi;
+    RETURN jumlah_kursi * harga_per_kursi;
 END;
 //
 DELIMITER ;
