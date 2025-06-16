@@ -95,6 +95,11 @@ Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
 
 ### 3. Diskon Tambahan untuk Membership
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
+![image](https://github.com/user-attachments/assets/0064f15e-1c3f-4395-b8c7-41a23dfd1d9a)
+![image](https://github.com/user-attachments/assets/7dd36021-a559-4b13-9cfd-a8ed815f80cd)
+
+
+
 
 ### 4. Tambah Poin saat Transaksi
 Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
