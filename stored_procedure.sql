@@ -1,6 +1,6 @@
 -- #6 Kembalikan Stok Makanan [HARUSNYA FUNCTION TAPI KU COBA JADI PROCEDURE]
 
-DELIMITER //
+DELIMITER $$
 CREATE PROCEDURE kembalikan_stok_makanan(p_transaksi CHAR(19))
 BEGIN
     DECLARE done INT DEFAULT 0;
@@ -24,8 +24,7 @@ BEGIN
         WHERE id_makanan = makanan_id;
     END LOOP;
     CLOSE cur;
-END;
-//
+END$$
 DELIMITER ;
 
 -- CALL kembalikan_stok_makanan('TRX202506100001');
@@ -71,6 +70,25 @@ END $$
 DELIMITER ;
 
 -- #4 add transaksi
+CREATE PROCEDURE create_transaksi(
+    IN p_biaya DECIMAL(10, 2),
+    IN p_pelanggan_id CHAR(5),
+    IN p_jadwal_tayang_id CHAR(7),
+    IN p_teater_id CHAR(5),
+    IN promosi_id CHAR(10) DEFAULT NULL,
+)
+BEGIN
+    DECLARE pajak DECIMAL(10, 2);
+    DECLARE promo DECIMAL(10, 2) DEFAULT 0;
+
+    IF cek_membership(p_pelanggan_id) THEN
+        UPDATE membership
+        SET poin = poin + harga_ke_poin(p_biaya)
+        WHERE pelanggan_id_pelanggan = p_pelanggan_id;
+    END IF;
+    
+END $$
+DELIMITER ;
 
 -- #5 lokasi studio menjual makanan apa saja
 DELIMITER $$

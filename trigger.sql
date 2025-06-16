@@ -50,16 +50,25 @@ END$$
 DELIMITER ;
 
 -- #3
--- triger diskon tambahan ketika user ada membership [DONE]
+-- triger diskon tambahan ketika user ada membership [UPDATED]
 DELIMITER $$
 CREATE TRIGGER trg_diskon_membership
 BEFORE INSERT ON TRANSAKSI
 FOR EACH ROW
 BEGIN 
-    DECLARE diskon INT DEFAULT 0;
+    DECLARE diskon DECIMAL(10,2) DEFAULT 0;
+    DECLARE subtotal DECIMAL(10,2);
+    
+    -- If customer has membership, apply 10% discount
     IF cek_membership(NEW.pelanggan_id_pelanggan) THEN
-        SET diskon = 10; -- Diskon 10% untuk anggota
-        SET NEW.total_biaya = NEW.total_biaya * (1 - diskon / 100);
+        -- Get the original total_biaya
+        SET subtotal = NEW.total_biaya;
+        
+        -- Calculate discount (10%)
+        SET diskon = subtotal * 0.1;
+        
+        -- Apply the discount to total_biaya
+        SET NEW.total_biaya = NEW.total_biaya - diskon;
     END IF;
 END $$
 DELIMITER ;
