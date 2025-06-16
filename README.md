@@ -185,6 +185,40 @@ SELECT cek_membership('P0025') AS status_membership;
 ### 2. Validasi Masa Berlaku Promosi
 Mengecek apakah tanggal saat ini masih dalam rentang masa berlaku promosi.
 
+```sql
+DELIMITER //
+
+CREATE FUNCTION promosi_masih_berlaku(p_id CHAR(10))
+RETURNS BOOLEAN
+READS SQL DATA
+BEGIN
+    DECLARE status BOOL DEFAULT FALSE;
+
+    SELECT 
+        (CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir)
+    INTO 
+        status
+    FROM 
+        PROMOSI
+    WHERE 
+        id_promosi = p_id;
+
+    RETURN IFNULL(status, FALSE);
+END;
+//
+
+DELIMITER ;
+```
+```sql
+SELECT promosi_masih_berlaku('PR001') AS masih_berlaku;
+SELECT promosi_masih_berlaku('PR014') AS masih_berlaku;
+```
+![image](https://github.com/user-attachments/assets/028c2556-fe11-4b11-adba-c2bc6e8cb2a1)
+![image](https://github.com/user-attachments/assets/55c40ed0-934a-4c5a-9265-a0bbf7595377)
+
+![image](https://github.com/user-attachments/assets/e4d7fb4e-e2df-4c4b-afca-23608dbc2349)
+![image](https://github.com/user-attachments/assets/e23894be-6350-4444-9f19-44003dff49e1)
+
 ### 3. Hitung Total Penggunaan Promosi
 Mengembalikan total jumlah penggunaan promosi tertentu oleh semua pelanggan.
 
