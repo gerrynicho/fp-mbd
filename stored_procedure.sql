@@ -76,12 +76,10 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE lokasi_studio_makanan()
 BEGIN
-    SELECT ls.id_lokasi_studio, ls.nama_studio, m.id_makanan, m.nama_makanan, m.harga
+    SELECT ls.id_lokasi_studio, ls.merk_studio, m.id_makanan, m.nama, m.harga
     FROM LOKASI_STUDIO ls
-    JOIN STUDIO s ON ls.id_lokasi_studio = s.lokasi_studio_id_lokasi_studio
-    JOIN KURSI k ON s.id_studio = k.studio_id_studio
-    JOIN TRANSAKSI_MAKANAN tm ON k.id_kursi = tm.kursi_id_kursi
-    JOIN MAKANAN m ON tm.makanan_id_makanan = m.id_makanan;
+    JOIN MAKANAN_LOKASI_STUDIO mls ON ls.id_lokasi_studio = mls.lokasi_studio_id_lokasi_studio
+    JOIN MAKANAN m ON mls.makanan_id_makanan = m.id_makanan;
 END $$
 DELIMITER ;
 
@@ -89,10 +87,10 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE lokasi_studio_film_tayang()
 BEGIN
-    SELECT ls.id_lokasi_studio, ls.nama_studio, f.id_film, f.judul, f.genre, f.rating_usia
+    SELECT ls.id_lokasi_studio, ls.merk_studio, f.id_film, f.judul_film, f.genre, f.rating_usia
     FROM LOKASI_STUDIO ls
-    JOIN STUDIO s ON ls.id_lokasi_studio = s.lokasi_studio_id_lokasi_studio
-    JOIN JADWAL_TAYANG jt ON s.id_studio = jt.studio_id_studio
+    JOIN TEATER t ON ls.id_lokasi_studio = t.lokasi_studio_id_lokasi_studio
+    JOIN JADWAL_TAYANG jt ON t.id_teater = jt.teater_id_teater
     JOIN FILM f ON jt.film_id_film = f.id_film;
 END $$
 DELIMITER ;

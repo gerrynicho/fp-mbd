@@ -12,7 +12,7 @@ BEGIN
     )
     INTO jumlah_pelanggan_hari_ini
     FROM TRANSAKSI t
-    WHERE t.tanggal = current_date;
+    WHERE DATE(t.tanggal_transaksi) = current_date;
 
     RETURN jumlah_pelanggan_hari_ini;
 END
