@@ -520,30 +520,22 @@ Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
 ### 4. Tambah Poin saat Transaksi
 Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
 
-```sql
+```
 DELIMITER $$
 
 CREATE TRIGGER tambah_poin_setelah_transaksi
 AFTER INSERT ON TRANSAKSI
 FOR EACH ROW
 BEGIN
-    DECLARE tambahan_poin INT;
-    DECLARE jumlah_membership INT;
+    DECLARE poin_tambahan INT;
 
-    -- Cek apakah pelanggan punya akun membership
-    SELECT COUNT(*) INTO jumlah_membership
-    FROM MEMBERSHIP
+    -- Hitung poin tambahan dari total_biaya (dibagi 10.000)
+    SET poin_tambahan = FLOOR(NEW.total_biaya / 10000);
+
+    -- Update poin pelanggan pada tabel MEMBERSHIP
+    UPDATE MEMBERSHIP
+    SET poin = poin + poin_tambahan
     WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
-
-    -- Jika punya membership dan total biaya >= 10000
-    IF jumlah_membership > 0 AND NEW.total_biaya >= 10000 THEN
-        SET tambahan_poin = FLOOR(NEW.total_biaya / 10000);
-
-        -- Update poin pelanggan
-        UPDATE MEMBERSHIP
-        SET poin = poin + tambahan_poin
-        WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
-    END IF;
 END$$
 
 DELIMITER ;
@@ -552,84 +544,93 @@ DELIMITER ;
 Input data yang diperluhkan untuk testing
 
 ```sql
-INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
-VALUES ('P0001', 'Budi', '081234567890', 'pass123');
-INSERT INTO MEMBERSHIP (id_membership, email, jenis_kelamin, tanggal_lahir, poin, pelanggan_id_pelanggan)
-VALUES ('M0001', 'budi@email.com', 'L', '2000-01-01', 0, 'P0001');
-INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
-VALUES ('P0002', 'Siti', '089876543210', 'pass456');
+INSERT INTO PELANGGAN VALUES
+('P001', 'Andi', '08123456789', 'pass123');
+INSERT INTO MEMBERSHIP VALUES
+('M001', 'andi@email.com', 'L', '2000-01-01', 0, 'P001');
+INSERT INTO LOKASI_STUDIO VALUES
+('LS001', 'Jl. Sudirman No.1', '021111222', 'XXI');
+
+INSERT INTO TEATER VALUES
+('T001', 100, 'LS001');
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.7, 'Final battle.');
+
+INSERT INTO JADWAL_TAYANG VALUES
+('JDT001', '2025-06-16 14:00:00', 'F001', 'T001');
 ```
 
-Testing
+pemicu trigger
 
-```sql
-INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
-VALUES ('TRX000000000000001', 45000.00, 4500.00, 'P0001');
-INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
-VALUES ('TRX000000000000002', 60000.00, 6000.00, 'P0002');
-INSERT INTO TRANSAKSI (id_transaksi, total_biaya, biaya_pajak, pelanggan_id_pelanggan)
-VALUES ('TRX000000000000003', 8000.00, 800.00, 'P0001');
+```
+INSERT INTO TRANSAKSI (
+    id_transaksi, total_biaya, biaya_pajak, tanggal_transaksi, 
+    pelanggan_id_pelanggan, jadwal_tayang_id_tayang, teater_id_teater
+) VALUES (
+    'TRX000000000000001', 45000, 5000, NOW(), 
+    'P001', 'JDT001', 'T001'
+);
 ```
 
 P0001 akan mempunyai 4 poin karena dia memiliki membership dan mengeluarkan biaya lebih dari 10.000
 
-P0002 tidak memiliki poin karena dia tidak memiliki membership
-
 Cek
 
 ```sql
-SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0001';
-SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0002';
+SELECT * FROM MEMBERSHIP WHERE id_membership = 'M001';
 ```
 
-![image](https://github.com/user-attachments/assets/74150003-00cc-4736-bad9-3cb573e6a91e)
-
-![image](https://github.com/user-attachments/assets/ce90a4c5-7642-40d7-8298-a62d9b9665ad)
+![Screenshot 2025-06-16 210922](https://github.com/user-attachments/assets/39d0dc43-c677-41f0-8b2c-57e2260c9136)
 
 ### 5. Trigger Pesan Kursi
 Trigger baru yang menandai kursi sebagai tidak tersedia ketika ditambahkan ke detail transaksi.
 
-```sql
+```
 DELIMITER $$
-CREATE TRIGGER trg_pesan_kursi
+
+CREATE TRIGGER pesan_kursi_tidak_tersedia
 AFTER INSERT ON DETAIL_TRANSAKSI
 FOR EACH ROW
-BEGIN 
-    -- Menandai kursi sebagai tidak tersedia ketika dipesan
+BEGIN
     UPDATE KURSI
     SET sedia = FALSE
     WHERE id_kursi = NEW.kursi_id_kursi;
-END $$
+END$$
+
 DELIMITER ;
 ```
+
+Input data untuk testing
+
+```
+INSERT INTO KURSI (id_kursi, row_kursi, column_kursi, sedia, teater_id_teater)
+VALUES ('K001', 'A', 1, TRUE, 'T001');
+INSERT INTO TRANSAKSI (
+    id_transaksi, total_biaya, biaya_pajak, tanggal_transaksi, 
+    pelanggan_id_pelanggan, jadwal_tayang_id_tayang, teater_id_teater
+) VALUES (
+    'TRX000000000000002', 50000, 5000, NOW(), 
+    'P001', 'JDT001', 'T001'
+);
+```
+
+pemicu trigger
+
+```
+INSERT INTO DETAIL_TRANSAKSI (id_detail_transaksi, transaksi_id_transaksi, kursi_id_kursi)
+VALUES ('DT001', 'TRX000000000000002', 'K001');
+```
+
+cek
+
+```
+SELECT id_kursi, sedia FROM KURSI WHERE id_kursi = 'K001';
+```
+
+![Screenshot 2025-06-16 211235](https://github.com/user-attachments/assets/d2b5147e-50f5-46fb-8331-b77e27de180f)
 
 ### 6. Trigger Kosongkan Kursi Setelah Film
 Trigger untuk membebaskan kursi setelah film selesai, dengan mekanisme yang lebih efisien.
-
-```sql
-DELIMITER $$
-CREATE TRIGGER trg_kosongkan_kursi_setelah_film
-AFTER UPDATE ON JADWAL_TAYANG
-FOR EACH ROW
-BEGIN 
-    -- Jika jadwal tayang sudah lewat, bebaskan kursi
-    IF NEW.jadwal < NOW() THEN
-        UPDATE KURSI k
-        INNER JOIN DETAIL_TRANSAKSI dt ON k.id_kursi = dt.kursi_id_kursi
-        INNER JOIN TRANSAKSI t ON dt.transaksi_id_transaksi = t.id_transaksi
-        SET k.sedia = TRUE
-        WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
-    END IF;
-END $$
-DELIMITER ;
-```
-
-Status kursi akan menjadi FALSE
-
-![image](https://github.com/user-attachments/assets/b42cb384-a4cf-4e07-95c2-fc1961d36a59)
-
-
----
 
 ## 🧩 Stored Procedure
 
