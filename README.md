@@ -210,12 +210,42 @@ Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 ### 1. Promosi untuk 10 Orang Pertama per Hari
 Trigger untuk membatasi promosi hanya berlaku untuk 10 transaksi pertama pada hari tersebut.
+![image|300](https://github.com/user-attachments/assets/5d0d9206-e410-4fe5-9251-525472ae8999)
+![image](https://github.com/user-attachments/assets/8e2d3552-b0f9-4651-b7de-fa612b457404)
+Promosi terganti jadi PR010
 
 ### 2. Trigger Stok Menipis
 Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
+![image|300](https://github.com/user-attachments/assets/2496e5ff-9ce2-4647-bcca-0bbcdd51762e)
+
+Testing
+
+<br><i>Untuk stok kurang dari 5</i> 
+```sql
+UPDATE makanan
+SET stok = (SELECT stok FROM makanan WHERE id_makanan = 'M0001') - 6
+WHERE id_makanan = 'M0001';
+```
+![image](https://github.com/user-attachments/assets/9354096e-f84e-4559-9cac-a357552bd2cc)
+
+Hasil
+
+<br>
+![image|300](https://github.com/user-attachments/assets/24e94b78-772a-44f9-8457-c195e1202ac9)
+
+
+
+<i>Untuk stok sama dengan 0</i> 
+
+<i>Untuk stok kurang dari 0</i> 
 
 ### 3. Diskon Tambahan untuk Membership
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
+![image](https://github.com/user-attachments/assets/0064f15e-1c3f-4395-b8c7-41a23dfd1d9a)
+![image](https://github.com/user-attachments/assets/7dd36021-a559-4b13-9cfd-a8ed815f80cd)
+
+
+
 
 ### 4. Tambah Poin saat Transaksi
 Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
