@@ -268,29 +268,208 @@ SELECT total_penggunaan_promosi('PR011') AS jumlah_penggunaan;
 ### 4. Kalkulasi Harga Setelah Promo
 Mengurangi harga awal dengan persentase atau nilai diskon dari promosi yang valid.
 
+```sql
+DELIMITER //
+
+CREATE FUNCTION harga_setelah_promo(p_id CHAR(10), harga_awal DECIMAL(10, 2))
+RETURNS DECIMAL(10,2)
+READS SQL DATA
+BEGIN
+    DECLARE diskon_persen DECIMAL(5,2);
+    DECLARE minimum INT;
+    DECLARE harga_akhir DECIMAL(10,2);
+
+    -- Ambil diskon dan syarat minimum_pembelian dari promosi yang masih berlaku
+    SELECT diskon, minimum_pembelian
+    INTO diskon_persen, minimum
+    FROM PROMOSI
+    WHERE id_promosi = p_id
+      AND CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir;
+
+    -- Jika promosi tidak ditemukan atau tidak berlaku
+    IF diskon_persen IS NULL OR minimum IS NULL THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Jika harga tidak memenuhi minimum pembelian, tidak dapat diskon
+    IF harga_awal < minimum THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Hitung harga akhir setelah diskon
+    SET harga_akhir = harga_awal - (harga_awal * (diskon_persen / 100));
+
+    RETURN harga_akhir;
+END;
+//
+
+DELIMITER ;
+
+```
+```sql
+SELECT harga_setelah_promo('PR014', 50000) AS harga_setelah_diskon;
+```
+jika memenuhi semua syarat, maka harga akan di potong diskon
+![image](https://github.com/user-attachments/assets/9caedac6-8c98-48b8-a711-a72598249365)
+![image](https://github.com/user-attachments/assets/ec5fe462-d7ed-4735-8d12-cf86d419160e)
+
+misalnya minimum pembelian tidka terpenuhi,
+```sql
+SELECT harga_setelah_promo('PR014', 10000) AS harga_setelah_diskon;
+```
+![image](https://github.com/user-attachments/assets/98ab5944-6d2f-4286-96d2-73b0e5b5a2c7)
+
+
 ### 5. Kalkulasi Harga Makanan dalam Keranjang
 Menghitung total harga makanan berdasarkan kuantitas dan harga satuan masing-masing item dalam keranjang.
 
-### 6. Kembalikan Stok Makanan
-Mengembalikan stok makanan ke jumlah awal apabila transaksi dibatalkan.
+```sql
 
-### 7. Cek Poin untuk Free Tiket
+DELIMITER //
+CREATE FUNCTION total_harga_keranjang(p_transaksi CHAR(19))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total DECIMAL(10,2);
+    SELECT SUM(m.harga * tm.jumlah)
+    INTO total
+    FROM TRANSAKSI_MAKANAN tm
+    JOIN MAKANAN m ON tm.makanan_id_makanan = m.id_makanan
+    WHERE tm.transaksi_id_transaksi = p_transaksi;
+    RETURN IFNULL(total, 0);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT total_harga_keranjang('TRX202506100001');
+SELECT total_harga_keranjang('TRX202506100002');
+
+```
+![image](https://github.com/user-attachments/assets/8e0d36ed-ad58-4430-ba22-29968924d826)
+![image](https://github.com/user-attachments/assets/00b3d965-97ce-43dd-943a-9ac426ea73c7)
+
+### 6. Cek Poin untuk Free Tiket
 Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
 
-### 8. Konversi Total Harga Menjadi Poin
+```sql
+DELIMITER //
+CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
+RETURNS INT
+BEGIN
+    DECLARE poin INT DEFAULT 0;
+
+    SELECT poin INTO poin
+    FROM MEMBERSHIP
+    WHERE TRIM(pelanggan_id_pelanggan) = TRIM(p_id);
+
+    RETURN FLOOR(poin / 100);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT jumlah_tiket_gratis('P0001');
+SELECT jumlah_tiket_gratis('P0002');
+```
+
+
+### 7. Konversi Total Harga Menjadi Poin
 Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
 
-### 9. Hitung Pajak
+
+```sql
+DELIMITER //
+CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    RETURN FLOOR(total / 25000);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT harga_ke_poin(126000); -- Hasil: 5
+```
+![image](https://github.com/user-attachments/assets/eebe4ddc-1c71-4c3a-aecf-2b179cfed174)
+
+
+### 8. Hitung Pajak
 Menambahkan pajak (misal 10%) dari subtotal transaksi.
 
-### 10. Hitung Refund Pembatalan
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_pajak(subtotal DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN subtotal * 0.10;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_pajak(100000); -- Hasil: 10000
+```
+![image](https://github.com/user-attachments/assets/4730e60b-5814-4f4a-beae-002c5b8e3eb4)
+
+### 9. Hitung Refund Pembatalan
 Menghitung nominal refund sesuai kebijakan (misal potongan 20% dari total).
 
-### 11. Hitung Total Transaksi
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_refund(total DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN total * 0.80; -- Potongan 20%
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_refund(100000); -- Hasil: 80000
+```
+
+
+### 10. Hitung Total Transaksi
 Menjumlahkan subtotal, pajak, biaya admin, dan dikurangi diskon jika ada.
 
-### 12. Hitung Harga Kursi
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_total(subtotal DECIMAL(10,2), pajak DECIMAL(10,2), biaya_admin DECIMAL(10,2), diskon DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN subtotal + pajak + biaya_admin - diskon;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_total(100000, 10000, 5000, 15000); -- Hasil: 100000
+```
+
+
+### 11. Hitung Harga Kursi
 Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
+
+```sql
+DELIMITER //
+CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN jumlah_kursi * harga_per_kursi;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT harga_kursi(3, 45000); -- Hasil: 135000
+```
+
 
 ---
 
