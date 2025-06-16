@@ -222,6 +222,49 @@ SELECT promosi_masih_berlaku('PR014') AS masih_berlaku;
 ### 3. Hitung Total Penggunaan Promosi
 Mengembalikan total jumlah penggunaan promosi tertentu oleh semua pelanggan.
 
+```sql
+DELIMITER //
+
+CREATE FUNCTION total_penggunaan_promosi(p_id CHAR(10))
+RETURNS INT
+BEGIN
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*) 
+    INTO total
+    FROM PROMOSI_TRANSAKSI
+    WHERE promosi_id_promosi = p_id;
+
+    RETURN total;
+END;
+//
+
+DELIMITER ;
+
+```
+
+
+menambah dummy data
+```sql
+INSERT INTO PROMOSI_TRANSAKSI VALUES
+('TRX202506100002','PR014'),
+('TRX202506110001','PR014'),
+('TRX202506120001','PR014'),
+('TRX202506130001','PR011');
+```
+
+```sql
+SELECT total_penggunaan_promosi('PR014') AS jumlah_penggunaan;
+SELECT total_penggunaan_promosi('PR011') AS jumlah_penggunaan;
+
+```
+![image](https://github.com/user-attachments/assets/800e00f8-78e4-4c92-9503-2a93579356e5)
+
+![image](https://github.com/user-attachments/assets/b9a36bf8-f168-4a53-bff6-3286d8205989)
+
+![image](https://github.com/user-attachments/assets/70d3f28a-5351-49e5-8260-55aef3d09f74)
+
+
 ### 4. Kalkulasi Harga Setelah Promo
 Mengurangi harga awal dengan persentase atau nilai diskon dari promosi yang valid.
 
