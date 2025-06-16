@@ -1,5 +1,7 @@
 DELIMITER $$
+-- #1
 -- Trigger untuk menambahkan promosi hanya jika pelanggan masuk 10 orang pertama
+-- menurutku ini harus refactor buat bikin count jadi sistem variabel
 CREATE TRIGGER trg_diskon_10_orang
 BEFORE INSERT ON PROMOSI_TRANSAKSI
 FOR EACH ROW
@@ -9,15 +11,21 @@ BEGIN
     SET count = hitung_pelanggan_hari_ini(CURDATE());
     IF count <= 10 THEN
         SET NEW.promosi_id_promosi = 'PR010';
-    ENDIF;
+    END IF;
 END $$
 
 DELIMITER ;
 
+<<<<<<< HEAD
 -- Trigger untuk warning low stok
+=======
+
+-- #2
+-- trigger stok menipis [DONE]
+>>>>>>> 595c5c9ffda1794bf4a6ae1eb212efd69abeba2f
 DELIMITER $$
 
-CREATE TRIGGER low_stok
+CREATE TRIGGER trg_low_stok
 BEFORE UPDATE ON MAKANAN
 FOR EACH ROW 
 BEGIN 
@@ -45,6 +53,7 @@ END$$
 
 DELIMITER ;
 
+<<<<<<< HEAD
 -- Trigger untuk menambahkan diskon jika ada membership
 DELIMITER $$
 
@@ -67,3 +76,68 @@ BEGIN
 END $$
 
 DELIMITER ;
+=======
+-- #3
+-- triger diskon tambahan ketika user ada membership [DONE]
+DELIMITER $$
+CREATE TRIGGER trg_diskon_membership
+BEFORE INSERT ON TRANSAKSI
+FOR EACH ROW
+BEGIN 
+    DECLARE diskon INT DEFAULT 0;
+    IF cek_membership(NEW.pelanggan_id_pelanggan) THEN
+        SET diskon = 10; -- Diskon 10% untuk anggota
+        SET NEW.total_biaya = NEW.total_biaya * (1 - diskon / 100);
+    END IF;
+END $$
+DELIMITER ;
+
+-- #4
+-- trigger tambah poin saat transaksi [DONE]
+DELIMITER $$
+CREATE TRIGGER trg_tambah_poin
+AFTER INSERT ON TRANSAKSI
+FOR EACH ROW
+BEGIN 
+    DECLARE add_poin INT DEFAULT 0;
+
+    SET add_poin = harga_ke_poin(NEW.total_biaya);
+
+    -- Update poin di tabel membership
+    UPDATE MEMBERSHIP
+    SET poin = poin + add_poin
+    WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
+END $$
+DELIMITER ;
+
+-- #5
+-- trigger untuk menandai kursi tidak tersedia saat dipesan
+DELIMITER $$
+CREATE TRIGGER trg_pesan_kursi
+AFTER INSERT ON DETAIL_TRANSAKSI
+FOR EACH ROW
+BEGIN 
+    -- Menandai kursi sebagai tidak tersedia ketika dipesan
+    UPDATE KURSI
+    SET sedia = FALSE
+    WHERE id_kursi = NEW.kursi_id_kursi;
+END $$
+DELIMITER ;
+
+-- #6
+-- trigger untuk membebaskan kursi setelah film selesai
+DELIMITER $$
+CREATE TRIGGER trg_kosongkan_kursi_setelah_film
+AFTER UPDATE ON JADWAL_TAYANG
+FOR EACH ROW
+BEGIN 
+    -- Jika jadwal tayang sudah lewat, bebaskan kursi
+    IF NEW.jadwal < NOW() THEN
+        UPDATE KURSI k
+        INNER JOIN DETAIL_TRANSAKSI dt ON k.id_kursi = dt.kursi_id_kursi
+        INNER JOIN TRANSAKSI t ON dt.transaksi_id_transaksi = t.id_transaksi
+        SET k.sedia = TRUE
+        WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
+    END IF;
+END $$
+>>>>>>> 595c5c9ffda1794bf4a6ae1eb212efd69abeba2f

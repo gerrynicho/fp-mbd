@@ -51,15 +51,6 @@ CREATE TABLE MEMBERSHIP (
     FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
 );
 
-CREATE TABLE TRANSAKSI (
-    id_transaksi CHAR(19) PRIMARY KEY,
-    total_biaya DECIMAL(10, 2) NOT NULL,
-    biaya_pajak DECIMAL(10, 2) NOT NULL,
-    pelanggan_id_pelanggan CHAR(5) NOT NULL,
-    tanggal TIMESTAMP NOT NULL DEFAULT CURDATE(),
-    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
-);
-
 CREATE TABLE TEATER(
     id_teater CHAR(5) PRIMARY KEY,
     jumlah_kursi_tersedia INT NOT NULL,
@@ -82,6 +73,19 @@ CREATE TABLE MAKANAN_LOKASI_STUDIO (
     PRIMARY KEY (makanan_id_makanan, lokasi_studio_id_lokasi_studio),
     FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan),    
     FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+);
+
+CREATE TABLE TRANSAKSI (
+    id_transaksi CHAR(19) PRIMARY KEY,
+    total_biaya DECIMAL(10, 2) NOT NULL,
+    biaya_pajak DECIMAL(10, 2) NOT NULL,
+    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
 );
 
 CREATE TABLE TRANSAKSI_MAKANAN (
@@ -108,8 +112,16 @@ CREATE TABLE KURSI(
     row_kursi CHAR(1) NOT NULL,
     column_kursi INT NOT NULL,
     sedia BOOLEAN NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+);
+
+CREATE TABLE DETAIL_TRANSAKSI (
+    id_detail_transaksi CHAR(10) PRIMARY KEY,
     transaksi_id_transaksi CHAR(19) NOT NULL,
-    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi)
+    kursi_id_kursi CHAR(5) NOT NULL,
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
+    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi)
 );
 
 CREATE TABLE KURSI_JADWAL_TAYANG(
@@ -127,4 +139,3 @@ CREATE TABLE log_notifikasi (
     pesan TEXT,
     waktu DATETIME
 );
-

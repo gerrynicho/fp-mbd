@@ -1,6 +1,14 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
+  - [📊 Database Schema Overview](#-database-schema-overview)
+    - [Recent Schema Updates (Version 2.0)](#recent-schema-updates-version-20)
+      - [🔄 **Perubahan Utama:**](#-perubahan-utama)
+      - [🗃️ **Tabel Baru:**](#️-tabel-baru)
+      - [🔧 **Tabel Yang Diperbarui:**](#-tabel-yang-diperbarui)
+  - [🔄 Schema Migration Benefits](#-schema-migration-benefits)
+    - [Keuntungan Schema Baru:](#keuntungan-schema-baru)
+    - [Migration Notes:](#migration-notes)
   - [🧠 Function](#-function)
     - [1. Cek Membership Pelanggan](#1-cek-membership-pelanggan)
     - [2. Validasi Masa Berlaku Promosi](#2-validasi-masa-berlaku-promosi)
@@ -19,8 +27,8 @@
     - [2. Trigger Stok Menipis](#2-trigger-stok-menipis)
     - [3. Diskon Tambahan untuk Membership](#3-diskon-tambahan-untuk-membership)
     - [4. Tambah Poin saat Transaksi](#4-tambah-poin-saat-transaksi)
-    - [5. Kursi Kosong saat Film Selesai](#5-kursi-kosong-saat-film-selesai)
-    - [6. Auto Kosongkan Kursi saat Dipesan](#6-auto-kosongkan-kursi-saat-dipesan)
+    - [5. Trigger Pesan Kursi](#5-trigger-pesan-kursi)
+    - [6. Trigger Kosongkan Kursi Setelah Film](#6-trigger-kosongkan-kursi-setelah-film)
   - [🧩 Stored Procedure](#-stored-procedure)
     - [1. Top 3 Makanan Terlaris per Kategori](#1-top-3-makanan-terlaris-per-kategori)
     - [2. Film Paling Populer](#2-film-paling-populer)
@@ -29,7 +37,7 @@
     - [5. Studio Menjual Makanan Apa Saja](#5-studio-menjual-makanan-apa-saja)
     - [6. Studio Menayangkan Film Apa Saja](#6-studio-menayangkan-film-apa-saja)
     - [7. Teater Tempat Film Ditayangkan](#7-teater-tempat-film-ditayangkan)
-    - [8. Jadwal Tayang di Studio Tertentu](#8-jadwal-tayang-di-studio-tertentu)
+    - [8. Jadwal Tayang di Teater Tertentu](#8-jadwal-tayang-di-teater-tertentu)
     - [9. Film Tersedia Berdasarkan Tanggal dan Lokasi](#9-film-tersedia-berdasarkan-tanggal-dan-lokasi)
     - [10. Pembatalan Transaksi](#10-pembatalan-transaksi)
     - [11. Edit Transaksi (Pindah Kursi/Jadwal)](#11-edit-transaksi-pindah-kursijadwal)
@@ -39,13 +47,129 @@
     - [📁 Table: `Kursi`](#-table-kursi)
     - [📁 Table: `Lokasi_Studio`](#-table-lokasi_studio)
     - [📁 Table: `Pelanggan`](#-table-pelanggan)
+    - [📁 Table: `Transaksi`](#-table-transaksi)
+    - [📁 Table: `Detail_Transaksi`](#-table-detail_transaksi)
   
 # 🎬 Bioskop Database Design – Fitur & Indexing
+
+## 📊 Database Schema Overview
+
+### Recent Schema Updates (Version 2.0)
+
+Sistem database telah diperbarui dengan perubahan signifikan untuk meningkatkan normalisasi dan fleksibilitas:
+
+#### 🔄 **Perubahan Utama:**
+
+1. **Relasi Transaksi dan Detail Transaksi** - **0 to Many**
+   - Sebelumnya: Relasi one-to-one antara transaksi dan kursi
+   - Sekarang: Tabel `DETAIL_TRANSAKSI` baru untuk menangani multiple kursi per transaksi
+
+2. **Koneksi Langsung Transaksi**
+   - **Jadwal Tayang ↔ Transaksi**: Koneksi langsung melalui `jadwal_tayang_id_tayang`
+   - **Teater ↔ Transaksi**: Koneksi langsung melalui `teater_id_teater`
+
+3. **Peningkatan Atribut Waktu**
+   - Kolom `tanggal_transaksi` dengan tipe `DATETIME` untuk timestamp yang lebih akurat
+
+#### 🗃️ **Tabel Baru:**
+
+```sql
+CREATE TABLE DETAIL_TRANSAKSI (
+    id_detail_transaksi CHAR(10) PRIMARY KEY,
+    transaksi_id_transaksi CHAR(19) NOT NULL,
+    kursi_id_kursi CHAR(5) NOT NULL,
+    harga_kursi DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
+    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi)
+);
+```
+
+#### 🔧 **Tabel Yang Diperbarui:**
+
+**TRANSAKSI:**
+```sql
+CREATE TABLE TRANSAKSI (
+    id_transaksi CHAR(19) PRIMARY KEY,
+    total_biaya DECIMAL(10, 2) NOT NULL,
+    biaya_pajak DECIMAL(10, 2) NOT NULL,
+    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    -- Foreign keys...
+);
+```
+
+**KURSI:**
+```sql
+CREATE TABLE KURSI(
+    id_kursi CHAR(5) PRIMARY KEY,
+    row_kursi CHAR(1) NOT NULL,
+    column_kursi INT NOT NULL,
+    sedia BOOLEAN NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,  -- Bukan lagi ke transaksi
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+);
+```
+
+---
+
+## 🔄 Schema Migration Benefits
+
+### Keuntungan Schema Baru:
+
+1. **📈 Skalabilitas Lebih Baik**
+   - Satu transaksi dapat menangani multiple kursi dengan mudah
+   - Struktur yang lebih fleksibel untuk ekspansi fitur
+
+2. **🎯 Normalisasi Improved**
+   - Pemisahan concern antara transaksi dan detail kursi
+   - Relasi yang lebih jelas antar entitas
+
+3. **⚡ Performance Enhancement**
+   - Koneksi langsung jadwal-transaksi dan teater-transaksi mengurangi kompleksitas join
+   - Index yang lebih optimal untuk query umum
+
+4. **🔒 Data Integrity**
+   - Foreign key constraints yang lebih ketat
+   - Validasi data yang lebih baik melalui triggers
+
+5. **🛠️ Maintainability**
+   - Code yang lebih mudah dipahami dan dimaintain
+   - Trigger dan stored procedure yang lebih efisien
+
+### Migration Notes:
+
+- **Backward Compatibility**: Schema lama tidak kompatibel dengan yang baru
+- **Data Migration**: Semua data dummy telah diupdate sesuai struktur baru
+- **Testing**: Semua function, trigger, dan stored procedure telah diuji dengan schema baru
+- **Performance**: Query performance meningkat untuk operasi yang sering digunakan
+
+---
 
 ## 🧠 Function
 
 ### 1. Cek Membership Pelanggan
 Mengembalikan apakah pelanggan memiliki status membership berdasarkan ID pelanggan.
+
+```
+-- #1 CEK MEMBERSHIP PELANGGAN [DONE]
+DELIMITER //
+CREATE FUNCTION cek_membership(p_id CHAR(5))
+-- gk bisa deterministic gara" bisa aja function call before bikin membership baru
+-- trus pas user bikin membership
+-- function ini klo deterministic bakal kasi info salah
+RETURNS BOOLEAN
+BEGIN
+    DECLARE status BOOL;
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = p_id
+    ) INTO status;
+    RETURN status;
+END;
+//
+DELIMITER ;
+```
 
 ### 2. Validasi Masa Berlaku Promosi
 Mengecek apakah tanggal saat ini masih dalam rentang masa berlaku promosi.
@@ -162,64 +286,42 @@ SELECT * FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = 'P0002';
 
 ![image](https://github.com/user-attachments/assets/ce90a4c5-7642-40d7-8298-a62d9b9665ad)
 
-### 5. Kursi Kosong saat Film Selesai
-Trigger mengubah status kursi menjadi tersedia (`true`) setelah waktu selesai film.
-
-### 6. Auto Kosongkan Kursi saat Dipesan
-Saat pelanggan memesan, status kursi diubah menjadi tidak tersedia (`false`).
+### 5. Trigger Pesan Kursi
+Trigger baru yang menandai kursi sebagai tidak tersedia ketika ditambahkan ke detail transaksi.
 
 ```sql
 DELIMITER $$
-
-CREATE TRIGGER kosongkan_kursi_saat_dipesan
-AFTER INSERT ON KURSI_JADWAL_TAYANG
+CREATE TRIGGER trg_pesan_kursi
+AFTER INSERT ON DETAIL_TRANSAKSI
 FOR EACH ROW
-BEGIN
+BEGIN 
+    -- Menandai kursi sebagai tidak tersedia ketika dipesan
     UPDATE KURSI
     SET sedia = FALSE
     WHERE id_kursi = NEW.kursi_id_kursi;
-END$$
-
+END $$
 DELIMITER ;
 ```
 
-Data yang diperlukan untuk testing
+### 6. Trigger Kosongkan Kursi Setelah Film
+Trigger untuk membebaskan kursi setelah film selesai, dengan mekanisme yang lebih efisien.
 
 ```sql
-INSERT INTO KURSI (id_kursi, row_kursi, column_kursi, sedia, transaksi_id_transaksi)
-VALUES ('K001', 'A', 1, TRUE, 'TRX000000000000001');
-INSERT INTO FILM (
-    id_film, judul_film, genre, durasi, sutradara, rating_usia, rating_film, sinopsis
-) VALUES (
-    'F0001', 'Petualangan Si Kancil', 'Animasi', 90, 'Agus Salim', 'Semua Umur', 8.5, 'Cerita seru tentang petualangan seekor kancil menyelamatkan hutan.'
-);
-INSERT INTO LOKASI_STUDIO (
-    id_lokasi_studio, alamat_studio, no_telp, merk_studio
-) VALUES (
-    'L0001', 'Jl. Sudirman No. 99, Jakarta', '021888999', 'XXI Plaza'
-);
-INSERT INTO TEATER (
-    id_teater, jumlah_kursi_tersedia, lokasi_studio_id_lokasi_studio
-) VALUES (
-    'T0001', 100, 'L0001'
-);
-INSERT INTO JADWAL_TAYANG (id_tayang, jadwal, film_id_film, teater_id_teater)
-VALUES ('JT00001', '2025-06-14 15:00:00', 'F0001', 'T0001');
-```
-
-Testing
-
-```sql
-INSERT INTO KURSI_JADWAL_TAYANG (kursi_id_kursi, jadwal_tayang_id_tayang)
-VALUES ('K001', 'JT00001');
-```
-
-Cek
-
-```sql
-SELECT id_kursi, sedia
-FROM KURSI
-WHERE id_kursi = 'K001';
+DELIMITER $$
+CREATE TRIGGER trg_kosongkan_kursi_setelah_film
+AFTER UPDATE ON JADWAL_TAYANG
+FOR EACH ROW
+BEGIN 
+    -- Jika jadwal tayang sudah lewat, bebaskan kursi
+    IF NEW.jadwal < NOW() THEN
+        UPDATE KURSI k
+        INNER JOIN DETAIL_TRANSAKSI dt ON k.id_kursi = dt.kursi_id_kursi
+        INNER JOIN TRANSAKSI t ON dt.transaksi_id_transaksi = t.id_transaksi
+        SET k.sedia = TRUE
+        WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
+    END IF;
+END $$
+DELIMITER ;
 ```
 
 Status kursi akan menjadi FALSE
@@ -253,62 +355,59 @@ Mengembalikan daftar film yang sedang tayang oleh merk studio tertentu.
 ```
 DELIMITER $$
 
-CREATE PROCEDURE studio_menayangkan_film_apa_saja(
-    IN merk_studio_input VARCHAR(30)
-)
+CREATE PROCEDURE get_film_by_merk_studio(IN merk_input VARCHAR(30))
 BEGIN
-    SELECT DISTINCT
+    SELECT DISTINCT 
         F.id_film,
         F.judul_film,
         F.genre,
         F.durasi,
+        F.sutradara,
         F.rating_usia,
         F.rating_film,
-        L.merk_studio,
-        L.alamat_studio
-    FROM JADWAL_TAYANG JT
-    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
-    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+        F.sinopsis
+    FROM LOKASI_STUDIO LS
+    JOIN TEATER T ON LS.id_lokasi_studio = T.lokasi_studio_id_lokasi_studio
+    JOIN JADWAL_TAYANG JT ON T.id_teater = JT.teater_id_teater
     JOIN FILM F ON JT.film_id_film = F.id_film
-    WHERE L.merk_studio = merk_studio_input
-    ORDER BY F.judul_film;
+    WHERE LS.merk_studio = merk_input;
 END$$
 
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Input data yang diperlukan untuk testing untuk no 6-9
 
 ```
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.7, 'The final battle against Thanos.'),
+('F002', 'Frozen II', 'Animation', 103, 'Chris Buck', 'SU', 7.2, 'Elsa goes on a journey.'),
+('F003', 'Interstellar', 'Sci-Fi', 169, 'Christopher Nolan', '13+', 8.6, 'Journey through space and time.');
+
 INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+('LS001', 'Jl. Sudirman No.1, Jakarta', '021123456', 'XXI'),
+('LS002', 'Jl. Asia Afrika No.99, Bandung', '022987654', 'Cinepolis'),
+('LS003', 'Jl. Gajah Mada No.22, Surabaya', '031112233', 'XXI');
 
 INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+('T001', 100, 'LS001'),  -- XXI Jakarta
+('T002', 120, 'LS002'),  -- Cinepolis Bandung
+('T003', 90,  'LS003');  -- XXI Surabaya
 
 INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+('JDT001', '2025-06-16 14:00:00', 'F001', 'T001'),  -- Avengers @ XXI Jakarta
+('JDT002', '2025-06-16 17:00:00', 'F002', 'T002'),  -- Frozen @ Cinepolis Bandung
+('JDT003', '2025-06-16 20:00:00', 'F001', 'T003'),  -- Avengers @ XXI Surabaya
+('JDT004', '2025-06-17 13:00:00', 'F003', 'T003');  -- Interstellar @ XXI Surabaya
 ```
 
 Call procedure untuk menampilkan film yang ada di XXI
 
 ```
-CALL studio_menayangkan_film_apa_saja('XXI');
+CALL get_film_by_merk_studio('XXI');
 ```
 
-![image](https://github.com/user-attachments/assets/7218a66e-c037-4c42-b460-71dbd4af9fab)
+![image](https://github.com/user-attachments/assets/92a67403-9c06-4431-8f6b-b8b50662439a)
 
 ### 7. Teater Tempat Film Ditayangkan
 Menentukan film tertentu ditayangkan di teater mana dalam satu studio.
@@ -336,103 +435,49 @@ END$$
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi LS001
 
 ```
-INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
-
-INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
-
-INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+CALL teater_tempat_film_ditayangkan('F001', 'LS001');
 ```
 
-Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi L001
+![Screenshot 2025-06-16 201537](https://github.com/user-attachments/assets/6169767d-dbab-4fb4-9e81-ccbde8c90aa1)
 
-```
-CALL teater_tempat_film_ditayangkan('F001', 'L001');
-```
-
-![image](https://github.com/user-attachments/assets/f8d51a99-6939-4bb8-a4b5-4677d08943da)
-
-
-### 8. Jadwal Tayang di Studio Tertentu
-Menampilkan waktu tayang suatu film di lokasi studio tertentu pada tanggal tertentu.
+### 8. Jadwal Tayang di Lokasi Tertentu
+Menampilkan waktu tayang suatu film di lokasi tertentu.
 
 ```
 DELIMITER $$
 
-CREATE PROCEDURE jadwal_tayang_film_studio_tanggal(
-    IN id_film CHAR(5),
-    IN id_lokasi_studio CHAR(5),
-    IN tanggal_tayang DATE
+CREATE PROCEDURE jadwal_tayang_film_lokasi(
+    IN p_judul_film VARCHAR(50),
+    IN p_id_lokasi CHAR(5)
 )
 BEGIN
     SELECT 
-        JT.id_tayang,
-        F.judul_film,
-        T.id_teater,
-        L.alamat_studio,
-        JT.jadwal
-    FROM JADWAL_TAYANG JT
-    JOIN FILM F ON JT.film_id_film = F.id_film
-    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
-    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
-    WHERE F.id_film = id_film
-      AND L.id_lokasi_studio = id_lokasi_studio
-      AND DATE(JT.jadwal) = tanggal_tayang
-    ORDER BY JT.jadwal ASC;
+        jt.id_tayang,
+        f.judul_film,
+        jt.jadwal,
+        ls.alamat_studio,
+        t.id_teater
+    FROM JADWAL_TAYANG jt
+    JOIN FILM f ON jt.film_id_film = f.id_film
+    JOIN TEATER t ON jt.teater_id_teater = t.id_teater
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE f.judul_film = p_judul_film
+      AND ls.id_lokasi_studio = p_id_lokasi;
 END$$
 
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Menampilkan jadwal film Avengers: Endgame di lokasi LS001
 
 ```
-INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
-
-INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
-
-INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+CALL jadwal_tayang_film_lokasi('Avengers: Endgame', 'LS001');
 ```
 
-Call procedure untuk jadwal dari film F001 di lokasi L001 pada tanggal 2025-06-16
-
-```
-CALL jadwal_tayang_film_studio_tanggal('F001', 'L001', '2025-06-16');
-```
-
-![image](https://github.com/user-attachments/assets/f2029600-5357-4305-9e51-22491453e910)
+ ![Screenshot 2025-06-16 202028](https://github.com/user-attachments/assets/cb4dbe1c-16a3-49a4-98a7-6a36a971f892)
 
 ### 9. Film Tersedia Berdasarkan Tanggal dan Lokasi
 Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipilih.
@@ -440,64 +485,36 @@ Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipili
 ```
 DELIMITER $$
 
-CREATE PROCEDURE film_tersedia_berdasarkan_tanggal_lokasi(
-    IN tanggal_pilih DATE,
-    IN lokasi_pilih CHAR(5)
+CREATE PROCEDURE film_tersedia_tanggal_lokasi(
+    IN p_tanggal DATE,
+    IN p_id_lokasi CHAR(5)
 )
 BEGIN
-    SELECT 
-        F.id_film,
-        F.judul_film,
-        F.genre,
-        F.durasi,
-        F.sutradara,
-        F.rating_usia,
-        F.rating_film,
-        F.sinopsis,
-        JT.jadwal
-    FROM JADWAL_TAYANG JT
-    JOIN FILM F ON JT.film_id_film = F.id_film
-    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
-    WHERE DATE(JT.jadwal) = tanggal_pilih
-      AND T.lokasi_studio_id_lokasi_studio = lokasi_pilih
-    ORDER BY JT.jadwal ASC;
+    SELECT DISTINCT
+        f.id_film,
+        f.judul_film,
+        f.genre,
+        f.durasi,
+        f.sutradara,
+        f.rating_usia,
+        f.rating_film
+    FROM JADWAL_TAYANG jt
+    JOIN FILM f ON jt.film_id_film = f.id_film
+    JOIN TEATER t ON jt.teater_id_teater = t.id_teater
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE DATE(jt.jadwal) = p_tanggal
+      AND ls.id_lokasi_studio = p_id_lokasi;
 END$$
 
 DELIMITER ;
 ```
-
-Input data yang diperlukan untuk testing
-
-```
-INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
-
-INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
-
-INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
-```
-
-Call procedure untuk film yang tayang di L001 pada tanggal 2025-06-15
+Menampilkan film apa saja yang tayang pada 16 Juni 2025 di lokasi LS001
 
 ```
-CALL film_tersedia_berdasarkan_tanggal_lokasi('2025-06-15', 'L001');
+CALL film_tersedia_tanggal_lokasi('2025-06-16', 'LS001');
 ```
 
-![image](https://github.com/user-attachments/assets/574e8423-d675-40d6-b563-7766871b226b)
+![Screenshot 2025-06-16 202239](https://github.com/user-attachments/assets/8c6ccf63-b1c9-4249-a1b7-df719b13fa48)
 
 ### 10. Pembatalan Transaksi
 Menghapus transaksi dan rollback kursi, makanan, dan promosi yang digunakan.
@@ -530,17 +547,17 @@ Mengubah detail transaksi, seperti kursi atau jadwal film, dengan validasi keter
 ---
 
 ### 📁 Table: `Kursi`
-- **Kolom:** `row`, `number` (combined index: `idx_kursi(row, number)`)
+- **Kolom:** `row_kursi`, `column_kursi` (combined index: `idx_kursi(row_kursi, column_kursi)`)
 - **Alasan Indexing:**
   - Untuk efisiensi pencarian ketersediaan kursi berdasarkan posisi.
 - **Jenis Indexing:**
-  - `row`: **Dense Indexing**
-  - `number`: **Sparse Indexing** (dalam kombinasi)
+  - `row_kursi`: **Dense Indexing**
+  - `column_kursi`: **Sparse Indexing** (dalam kombinasi)
 
 ---
 
 ### 📁 Table: `Lokasi_Studio`
-- **Kolom:** `alamat`, `nama_studio`
+- **Kolom:** `alamat_studio`, `merk_studio`
 - **Alasan Indexing:**
   - Untuk pencarian berdasarkan lokasi atau nama studio yang panjang (VARCHAR/TEXT).
 - **Jenis Indexing:** **Dense Indexing**
@@ -548,9 +565,27 @@ Mengubah detail transaksi, seperti kursi atau jadwal film, dengan validasi keter
 ---
 
 ### 📁 Table: `Pelanggan`
-- **Kolom:** `id_pelanggan`
+- **Kolom:** `id_pelanggan`, `nama`
 - **Alasan Indexing:**
   - Untuk pencarian cepat saat login, mengecek transaksi, atau status membership.
+- **Jenis Indexing:** **Sparse Indexing**
+
+---
+
+### 📁 Table: `Transaksi`
+- **Kolom:** `tanggal_transaksi`, `pelanggan_id_pelanggan`
+- **Alasan Indexing:**
+  - `tanggal_transaksi`: untuk filtering berdasarkan waktu transaksi
+  - `pelanggan_id_pelanggan`: untuk query yang berkaitan dengan history pelanggan
+- **Jenis Indexing:** **Sparse Indexing**
+
+---
+
+### 📁 Table: `Detail_Transaksi`
+- **Kolom:** `transaksi_id_transaksi`, `kursi_id_kursi`
+- **Alasan Indexing:**
+  - `transaksi_id_transaksi`: untuk mengambil semua detail kursi dalam satu transaksi
+  - `kursi_id_kursi`: untuk mengecek status kursi dan riwayat pemakaian
 - **Jenis Indexing:** **Sparse Indexing**
 
 ---
