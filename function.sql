@@ -10,7 +10,7 @@ BEGIN
     SELECT COUNT(DISTINCT pelanggan_id_pelanggan)
     INTO jumlah_pelanggan_hari_ini
     FROM TRANSAKSI t
-    WHERE DATE(t.tanggal) = p_date;
+    WHERE DATE(t.tanggal_transaksi) = current_date;
 
     RETURN jumlah_pelanggan_hari_ini;
 END $$
