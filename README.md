@@ -355,25 +355,22 @@ Mengembalikan daftar film yang sedang tayang oleh merk studio tertentu.
 ```
 DELIMITER $$
 
-CREATE PROCEDURE studio_menayangkan_film_apa_saja(
-    IN merk_studio_input VARCHAR(30)
-)
+CREATE PROCEDURE get_film_by_merk_studio(IN merk_input VARCHAR(30))
 BEGIN
-    SELECT DISTINCT
+    SELECT DISTINCT 
         F.id_film,
         F.judul_film,
         F.genre,
         F.durasi,
+        F.sutradara,
         F.rating_usia,
         F.rating_film,
-        L.merk_studio,
-        L.alamat_studio
-    FROM JADWAL_TAYANG JT
-    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
-    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+        F.sinopsis
+    FROM LOKASI_STUDIO LS
+    JOIN TEATER T ON LS.id_lokasi_studio = T.lokasi_studio_id_lokasi_studio
+    JOIN JADWAL_TAYANG JT ON T.id_teater = JT.teater_id_teater
     JOIN FILM F ON JT.film_id_film = F.id_film
-    WHERE L.merk_studio = merk_studio_input
-    ORDER BY F.judul_film;
+    WHERE LS.merk_studio = merk_input;
 END$$
 
 DELIMITER ;
@@ -382,35 +379,35 @@ DELIMITER ;
 Input data yang diperlukan untuk testing
 
 ```
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.7, 'The final battle against Thanos.'),
+('F002', 'Frozen II', 'Animation', 103, 'Chris Buck', 'SU', 7.2, 'Elsa goes on a journey.'),
+('F003', 'Interstellar', 'Sci-Fi', 169, 'Christopher Nolan', '13+', 8.6, 'Journey through space and time.');
+
 INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+('LS001', 'Jl. Sudirman No.1, Jakarta', '021123456', 'XXI'),
+('LS002', 'Jl. Asia Afrika No.99, Bandung', '022987654', 'Cinepolis'),
+('LS003', 'Jl. Gajah Mada No.22, Surabaya', '031112233', 'XXI');
 
 INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+('T001', 100, 'LS001'),  -- XXI Jakarta
+('T002', 120, 'LS002'),  -- Cinepolis Bandung
+('T003', 90,  'LS003');  -- XXI Surabaya
 
 INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+('JDT001', '2025-06-16 14:00:00', 'F001', 'T001'),  -- Avengers @ XXI Jakarta
+('JDT002', '2025-06-16 17:00:00', 'F002', 'T002'),  -- Frozen @ Cinepolis Bandung
+('JDT003', '2025-06-16 20:00:00', 'F001', 'T003'),  -- Avengers @ XXI Surabaya
+('JDT004', '2025-06-17 13:00:00', 'F003', 'T003');  -- Interstellar @ XXI Surabaya
 ```
 
 Call procedure untuk menampilkan film yang ada di XXI
 
 ```
-CALL studio_menayangkan_film_apa_saja('XXI');
+CALL get_film_by_merk_studio('XXI');
 ```
 
-![image](https://github.com/user-attachments/assets/7218a66e-c037-4c42-b460-71dbd4af9fab)
+![image](https://github.com/user-attachments/assets/92a67403-9c06-4431-8f6b-b8b50662439a)
 
 ### 7. Teater Tempat Film Ditayangkan
 Menentukan film tertentu ditayangkan di teater mana dalam satu studio.
