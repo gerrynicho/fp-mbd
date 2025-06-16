@@ -16,13 +16,9 @@ END $$
 
 DELIMITER ;
 
-<<<<<<< HEAD
--- Trigger untuk warning low stok
-=======
 
 -- #2
 -- trigger stok menipis [DONE]
->>>>>>> 595c5c9ffda1794bf4a6ae1eb212efd69abeba2f
 DELIMITER $$
 
 CREATE TRIGGER trg_low_stok
@@ -40,20 +36,20 @@ BEGIN
     -- Warning: stok kosong (update tetap dilakukan)
     ELSEIF NEW.stok = 0 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id, 'NOTICE', 'Stok kosong', NOW());
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok kosong', NOW());
         -- No SIGNAL so update continues
 
     -- Notice: stok rendah (<= 5), update tetap dilakukan
     ELSEIF NEW.stok <= 5 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
         -- No SIGNAL so update continues
     END IF;
 END$$
 
 DELIMITER ;
 
-<<<<<<< HEAD
+
 -- Trigger untuk menambahkan diskon jika ada membership
 DELIMITER $$
 
@@ -140,4 +136,3 @@ BEGIN
         WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
     END IF;
 END $$
->>>>>>> 595c5c9ffda1794bf4a6ae1eb212efd69abeba2f
