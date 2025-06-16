@@ -86,6 +86,9 @@ Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 ### 1. Promosi untuk 10 Orang Pertama per Hari
 Trigger untuk membatasi promosi hanya berlaku untuk 10 transaksi pertama pada hari tersebut.
+![image|300](https://github.com/user-attachments/assets/5d0d9206-e410-4fe5-9251-525472ae8999)
+![image](https://github.com/user-attachments/assets/8e2d3552-b0f9-4651-b7de-fa612b457404)
+Promosi terganti jadi PR010
 
 ### 2. Trigger Stok Menipis
 Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
