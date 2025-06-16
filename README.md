@@ -376,7 +376,7 @@ END$$
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Input data yang diperlukan untuk testing untuk no 6-9
 
 ```
 INSERT INTO FILM VALUES
@@ -435,70 +435,86 @@ END$$
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
-
-```
-INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
-
-INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
-
-INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
-```
-
 Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi L001
 
 ```
-CALL teater_tempat_film_ditayangkan('F001', 'L001');
+CALL teater_tempat_film_ditayangkan('F001', 'LS001');
 ```
 
-![image](https://github.com/user-attachments/assets/f8d51a99-6939-4bb8-a4b5-4677d08943da)
+![Screenshot 2025-06-16 201537](https://github.com/user-attachments/assets/6169767d-dbab-4fb4-9e81-ccbde8c90aa1)
 
+### 8. Jadwal Tayang di Lokasi Tertentu
+Menampilkan waktu tayang suatu film di lokasi tertentu.
 
-### 8. Jadwal Tayang di Teater Tertentu
-Menampilkan waktu tayang suatu film di teater tertentu pada tanggal tertentu.
-
-```sql
+```
 DELIMITER $$
-CREATE PROCEDURE jadwal_tayang_teater_tertentu(p_teater_id CHAR(5))
+
+CREATE PROCEDURE jadwal_tayang_film_lokasi(
+    IN p_judul_film VARCHAR(50),
+    IN p_id_lokasi CHAR(5)
+)
 BEGIN
-    SELECT jt.id_tayang, f.judul_film, jt.jadwal
+    SELECT 
+        jt.id_tayang,
+        f.judul_film,
+        jt.jadwal,
+        ls.alamat_studio,
+        t.id_teater
     FROM JADWAL_TAYANG jt
     JOIN FILM f ON jt.film_id_film = f.id_film
-    WHERE jt.teater_id_teater = p_teater_id;
-END $$
+    JOIN TEATER t ON jt.teater_id_teater = t.id_teater
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE f.judul_film = p_judul_film
+      AND ls.id_lokasi_studio = p_id_lokasi;
+END$$
+
 DELIMITER ;
 ```
+
+Menampilkan jadwal film Avengers: Endgame di lokasi LS001
+
+```
+CALL jadwal_tayang_film_lokasi('Avengers: Endgame', 'LS001');
+```
+
+ ![Screenshot 2025-06-16 202028](https://github.com/user-attachments/assets/cb4dbe1c-16a3-49a4-98a7-6a36a971f892)
 
 ### 9. Film Tersedia Berdasarkan Tanggal dan Lokasi
 Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipilih.
 
-```sql
+```
 DELIMITER $$
-CREATE PROCEDURE film_tersedia_tanggal_lokasi(p_tanggal DATE, p_lokasi_studio_id CHAR(5))
+
+CREATE PROCEDURE film_tersedia_tanggal_lokasi(
+    IN p_tanggal DATE,
+    IN p_id_lokasi CHAR(5)
+)
 BEGIN
-    SELECT f.id_film, f.judul_film, jt.jadwal
-    FROM FILM f
-    JOIN JADWAL_TAYANG jt ON f.id_film = jt.film_id_film
+    SELECT DISTINCT
+        f.id_film,
+        f.judul_film,
+        f.genre,
+        f.durasi,
+        f.sutradara,
+        f.rating_usia,
+        f.rating_film
+    FROM JADWAL_TAYANG jt
+    JOIN FILM f ON jt.film_id_film = f.id_film
     JOIN TEATER t ON jt.teater_id_teater = t.id_teater
-    WHERE DATE(jt.jadwal) = p_tanggal AND t.lokasi_studio_id_lokasi_studio = p_lokasi_studio_id;
-END $$
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE DATE(jt.jadwal) = p_tanggal
+      AND ls.id_lokasi_studio = p_id_lokasi;
+END$$
+
 DELIMITER ;
 ```
+Menampilkan film apa saja yang tayang pada 16 Juni 2025 di lokasi LS001
+
+```
+CALL film_tersedia_tanggal_lokasi('2025-06-16', 'LS001');
+```
+
+![Screenshot 2025-06-16 202239](https://github.com/user-attachments/assets/8c6ccf63-b1c9-4249-a1b7-df719b13fa48)
 
 ### 10. Pembatalan Transaksi
 Menghapus transaksi dan rollback kursi, makanan, dan promosi yang digunakan.
