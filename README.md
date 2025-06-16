@@ -47,6 +47,25 @@
 ### 1. Cek Membership Pelanggan
 Mengembalikan apakah pelanggan memiliki status membership berdasarkan ID pelanggan.
 
+```
+-- #1 CEK MEMBERSHIP PELANGGAN [DONE]
+DELIMITER //
+CREATE FUNCTION cek_membership(p_id CHAR(5))
+-- gk bisa deterministic gara" bisa aja function call before bikin membership baru
+-- trus pas user bikin membership
+-- function ini klo deterministic bakal kasi info salah
+RETURNS BOOLEAN
+BEGIN
+    DECLARE status BOOL;
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = p_id
+    ) INTO status;
+    RETURN status;
+END;
+//
+DELIMITER ;
+```
+
 ### 2. Validasi Masa Berlaku Promosi
 Mengecek apakah tanggal saat ini masih dalam rentang masa berlaku promosi.
 
