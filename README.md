@@ -92,6 +92,28 @@ Promosi terganti jadi PR010
 
 ### 2. Trigger Stok Menipis
 Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
+![image|300](https://github.com/user-attachments/assets/2496e5ff-9ce2-4647-bcca-0bbcdd51762e)
+
+Testing
+
+<br><i>Untuk stok kurang dari 5</i> 
+```sql
+UPDATE makanan
+SET stok = (SELECT stok FROM makanan WHERE id_makanan = 'M0001') - 6
+WHERE id_makanan = 'M0001';
+```
+![image](https://github.com/user-attachments/assets/9354096e-f84e-4559-9cac-a357552bd2cc)
+
+Hasil
+
+<br>
+![image|300](https://github.com/user-attachments/assets/24e94b78-772a-44f9-8457-c195e1202ac9)
+
+
+
+<i>Untuk stok sama dengan 0</i> 
+
+<i>Untuk stok kurang dari 0</i> 
 
 ### 3. Diskon Tambahan untuk Membership
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
