@@ -10,7 +10,6 @@ BEGIN
 
     IF count <= 10 THEN
         SET NEW.promosi_id_promosi = 'PR010';
-
     ENDIF;
 END $$
 
