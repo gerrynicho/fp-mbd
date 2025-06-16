@@ -141,23 +141,3 @@ CREATE TABLE log_notifikasi (
 );
 
 DELIMITER $$
-
-CREATE TRIGGER diskon_membership
-BEFORE INSERT ON TRANSAKSI
-FOR EACH ROW
-BEGIN
-    DECLARE is_member INT DEFAULT 0;
-    DECLARE diskon_persen DECIMAL(5,2) DEFAULT 0.10; -- 10% discount
-    DECLARE biaya_awal DECIMAL(10,2);
-
-    SELECT COUNT(*) INTO is_member
-    FROM MEMBERSHIP
-    WHERE pelanggan_id_pelanggan = NEW.pelanggan_id_pelanggan;
-
-    IF is_member > 0 THEN
-        SET biaya_awal = NEW.total_biaya;
-        SET NEW.total_biaya = biaya_awal - (biaya_awal * diskon_persen);
-    END IF;
-END $$
-
-DELIMITER ;
