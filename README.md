@@ -431,6 +431,7 @@ DELIMITER ;
 ```sql
 SELECT hitung_refund(100000); -- Hasil: 80000
 ```
+![image](https://github.com/user-attachments/assets/62819c35-9a26-4e7a-a65e-ab5ba29e9685)
 
 
 ### 10. Hitung Total Transaksi
@@ -450,6 +451,7 @@ DELIMITER ;
 ```sql
 SELECT hitung_total(100000, 10000, 5000, 15000); -- Hasil: 100000
 ```
+![image](https://github.com/user-attachments/assets/5ff4e8c1-d88b-4652-be7d-9555e73c0cfd)
 
 
 ### 11. Hitung Harga Kursi
@@ -469,6 +471,7 @@ DELIMITER ;
 ```sql
 SELECT harga_kursi(3, 45000); -- Hasil: 135000
 ```
+![image](https://github.com/user-attachments/assets/06f6ced8-7f16-449c-8b50-fa670ebc4c0e)
 
 
 ---
