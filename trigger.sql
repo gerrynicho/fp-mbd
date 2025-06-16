@@ -9,7 +9,6 @@ BEGIN
     DECLARE count INTEGER DEFAULT 0;
 
     SET count = hitung_pelanggan_hari_ini(CURDATE());
-
     IF count <= 10 THEN
         SET NEW.promosi_id_promosi = 'PR010';
     END IF;
@@ -29,7 +28,7 @@ BEGIN
     -- Error: stok tidak boleh negatif
     IF NEW.stok < 0 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id, 'ERROR', 'Stok tidak mencukupi', NOW());
+        VALUES (NEW.id_makanan, 'ERROR', 'Stok tidak mencukupi', NOW());
 
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Error: Stok tidak mencukupi';
@@ -37,13 +36,13 @@ BEGIN
     -- Warning: stok kosong (update tetap dilakukan)
     ELSEIF NEW.stok = 0 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id, 'NOTICE', 'Stok kosong', NOW());
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok kosong', NOW());
         -- No SIGNAL so update continues
 
     -- Notice: stok rendah (<= 5), update tetap dilakukan
     ELSEIF NEW.stok <= 5 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
         -- No SIGNAL so update continues
     END IF;
 END$$

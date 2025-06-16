@@ -3,20 +3,10 @@
 -- functions, procedures, and triggers are not included
 SET @nama_db_fp_mbd = 'fp_mbd'; -- ganti dengan nama database kalian
 
-SET @sql = CONCAT('DROP DATABASE IF EXISTS ', nama_db_fp_mbd, ';');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+DROP DATABASE IF EXISTS nama_db_fp_mbd;
+CREATE DATABASE nama_db_fp_mbd;
+USE nama_db_fp_mbd;
 
-SET @sql = CONCAT('CREATE DATABASE ', nama_db_fp_mbd, ';');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = CONCAT('USE ', nama_db_fp_mbd, ';');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
 -- when session ends, the @nama_db_fp_mbd variable will be lost so no need for manual deallocation
 
 -- create table
@@ -73,18 +63,6 @@ CREATE TABLE MEMBERSHIP (
     FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
 );
 
-CREATE TABLE TRANSAKSI (
-    id_transaksi CHAR(19) PRIMARY KEY,
-    total_biaya DECIMAL(10, 2) NOT NULL,
-    biaya_pajak DECIMAL(10, 2) NOT NULL,
-    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    pelanggan_id_pelanggan CHAR(5) NOT NULL,
-    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
-    teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
-    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
-    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
-);
 
 CREATE TABLE TEATER(
     id_teater CHAR(5) PRIMARY KEY,
@@ -99,6 +77,19 @@ CREATE TABLE JADWAL_TAYANG (
     film_id_film CHAR(5) NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
     FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+);
+
+CREATE TABLE TRANSAKSI (
+    id_transaksi CHAR(19) PRIMARY KEY,
+    total_biaya DECIMAL(10, 2) NOT NULL,
+    biaya_pajak DECIMAL(10, 2) NOT NULL,
+    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
     FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
 );
 
@@ -461,22 +452,22 @@ INSERT INTO KURSI VALUES
 
 -- 8.5. DETAIL_TRANSAKSI (detail kursi untuk setiap transaksi)
 INSERT INTO DETAIL_TRANSAKSI VALUES
-('DT001','TRX202506100001','K001',50000),
-('DT002','TRX202506100001','K002',50000),
-('DT003','TRX202506100002','K003',75000),
-('DT004','TRX202506110001','K004',50000),
-('DT005','TRX202506120001','K005',100000),
-('DT006','TRX202506130001','K006',90000),
-('DT007','TRX202506140001','K007',55000),
-('DT008','TRX202506140001','K008',55000),
-('DT009','TRX202506150001','K009',85000),
-('DT010','TRX202506150001','K010',85000),
-('DT011','TRX202506160001','K011',95000),
-('DT012','TRX202506160001','K012',95000),
-('DT013','TRX202506160002','K013',140000),
-('DT014','TRX202506160002','K014',140000),
-('DT015','TRX202506170001','K015',120000),
-('DT016','TRX202506170001','K016',120000);
+('DT001','TRX202506100001','K001'),
+('DT002','TRX202506100001','K002'),
+('DT003','TRX202506100002','K003'),
+('DT004','TRX202506110001','K004'),
+('DT005','TRX202506120001','K005'),
+('DT006','TRX202506130001','K006'),
+('DT007','TRX202506140001','K007'),
+('DT008','TRX202506140001','K008'),
+('DT009','TRX202506150001','K009'),
+('DT010','TRX202506150001','K010'),
+('DT011','TRX202506160001','K011'),
+('DT012','TRX202506160001','K012'),
+('DT013','TRX202506160002','K013'),
+('DT014','TRX202506160002','K014'),
+('DT015','TRX202506170001','K015'),
+('DT016','TRX202506170001','K016');
 
 -- 9. KURSI_JADWAL_TAYANG (kursi dipesan terkait jadwal)
 INSERT INTO KURSI_JADWAL_TAYANG VALUES

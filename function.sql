@@ -19,84 +19,136 @@ DELIMITER ;
 
 
 -- #1 CEK MEMBERSHIP PELANGGAN [DONE]
+--
 DELIMITER //
+
 CREATE FUNCTION cek_membership(p_id CHAR(5))
--- gk bisa deterministic gara" bisa aja function call before bikin membership baru
--- trus pas user bikin membership
--- function ini klo deterministic bakal kasi info salah
 RETURNS BOOLEAN
+READS SQL DATA
 BEGIN
     DECLARE status BOOL;
+
     SELECT EXISTS (
-        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = p_id
+        SELECT 1 
+        FROM MEMBERSHIP 
+        WHERE pelanggan_id_pelanggan = p_id
     ) INTO status;
+
     RETURN status;
 END;
 //
-DELIMITER ;
--- SELECT cek_membership('P0001');
--- SELECT cek_membership('P0021');
 
---  #2 CEK MASA BERLAKU MEMBERSHIP [TENTATIVE]
+DELIMITER ;
+-- SELECT cek_membership('P0001') AS status_membership;
+-- SELECT cek_membership('P0025') AS status_membership;
+
+--  #2 CEK MASA BERLAKU MEMBERSHIP [DONE]
 DELIMITER //
 CREATE FUNCTION promosi_masih_berlaku(p_id CHAR(10))
--- gk bisa deterministic karena tergantung tanggal saat ini
 RETURNS BOOLEAN
+READS SQL DATA
 BEGIN
-    DECLARE status BOOL;
-    SELECT ( CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir )
-    INTO status
-    FROM PROMOSI
-    WHERE id_promosi = p_id;
-    RETURN status;
+    DECLARE status BOOL DEFAULT FALSE;
+
+    SELECT 
+        (CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir)
+    INTO 
+        status
+    FROM 
+        PROMOSI
+    WHERE 
+        id_promosi = p_id;
+
+    RETURN IFNULL(status, FALSE);
 END;
 //
+
 DELIMITER ;
 
--- SELECT promosi_masih_berlaku('PR001');
--- SELECT promosi_masih_berlaku('PR014');
+-- SELECT promosi_masih_berlaku('PR001') AS masih_berlaku;
+-- SELECT promosi_masih_berlaku('PR014') AS masih_berlaku;
+
 
 -- #3 Hitung Total Penggunaan Promosi [DONE]
 DELIMITER //
+
 CREATE FUNCTION total_penggunaan_promosi(p_id CHAR(10))
--- gk bisa deterministiic gara" bisa aja ada transaksi baru
--- yang menggunakan promosi ini
 RETURNS INT
 BEGIN
-    DECLARE total INT;
-    SELECT COUNT(*) INTO total
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*) 
+    INTO total
     FROM PROMOSI_TRANSAKSI
     WHERE promosi_id_promosi = p_id;
+
     RETURN total;
 END;
 //
+
 DELIMITER ;
 
+INSERT INTO PROMOSI_TRANSAKSI VALUES
+('TRX202506100002','PR014'),
+('TRX202506110001','PR014'),
+('TRX202506120001','PR014'),
+('TRX202506130001','PR011');
 
--- SELECT total_penggunaan_promosi('PR001');
--- SELECT total_penggunaan_promosi('PR014');
+
+-- SELECT total_penggunaan_promosi('PR014') AS jumlah_penggunaan;
+-- SELECT total_penggunaan_promosi('PR011') AS jumlah_penggunaan;
+
 
 
 --- #4. Kalkulasi Harga Setelah Promo [DONE]
 DELIMITER //
-CREATE FUNCTION harga_setelah_diskon(harga DECIMAL(10,2), diskon DECIMAL(5,2))
+
+CREATE FUNCTION harga_setelah_promo(p_id CHAR(10), harga_awal DECIMAL(10, 2))
 RETURNS DECIMAL(10,2)
-DETERMINISTIC -- deterministic gara" cuma basic math operation
+READS SQL DATA
 BEGIN
-    RETURN harga - (harga * diskon / 100);
+    DECLARE diskon_persen DECIMAL(5,2);
+    DECLARE minimum INT;
+    DECLARE harga_akhir DECIMAL(10,2);
+
+    -- Ambil diskon dan syarat minimum_pembelian dari promosi yang masih berlaku
+    SELECT diskon, minimum_pembelian
+    INTO diskon_persen, minimum
+    FROM PROMOSI
+    WHERE id_promosi = p_id
+      AND CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir;
+
+    -- Jika promosi tidak ditemukan atau tidak berlaku
+    IF diskon_persen IS NULL OR minimum IS NULL THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Jika harga tidak memenuhi minimum pembelian, tidak dapat diskon
+    IF harga_awal < minimum THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Hitung harga akhir setelah diskon
+    SET harga_akhir = harga_awal - (harga_awal * (diskon_persen / 100));
+
+    RETURN harga_akhir;
 END;
 //
+
 DELIMITER ;
 
---- SELECT harga_setelah_diskon(100000, 10); -- Hasil: 90000
+
+--- SELECT harga_setelah_promo('PR014', 50000) AS harga_setelah_diskon;
+--- SELECT harga_setelah_promo('PR014', 10000) AS harga_setelah_diskon;
 
 
 -- #5. Kalkulasi Harga Makanan dalam Keranjang [DONE]
 
+
 DELIMITER //
 CREATE FUNCTION total_harga_keranjang(p_transaksi CHAR(19))
-DETERMINISTIC -- determministic gara" transaksi gk bakal berubah
 RETURNS DECIMAL(10,2)
+DETERMINISTIC
 BEGIN
     DECLARE total DECIMAL(10,2);
     SELECT SUM(m.harga * tm.jumlah)
@@ -109,12 +161,11 @@ END;
 //
 DELIMITER ;
 
-
 -- SELECT total_harga_keranjang('TRX202506100001');
 -- SELECT total_harga_keranjang('TRX202506100002');
 
 
--- #7.  Cek Poin untuk Free Tiket [FAILED]
+-- #6.  Cek Poin untuk Free Tiket [FAILED]
 -- Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
 DELIMITER //
 CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
@@ -136,7 +187,7 @@ DELIMITER ;
 -- SELECT dapat_tiket_gratis('P0002');
 
 
--- #8. Konversi Total Harga Menjadi Poin [DONE]
+-- #7. Konversi Total Harga Menjadi Poin [DONE]
 -- Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
 DELIMITER //
 CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
@@ -150,7 +201,7 @@ DELIMITER ;
 
 -- SELECT harga_ke_poin(126000); -- Hasil: 5
 
--- #9, Hitung Pajak
+-- #8, Hitung Pajak
 -- Menambahkan pajak (misal 10%) dari subtotal transaksi.
 DELIMITER //
 CREATE FUNCTION hitung_pajak(subtotal DECIMAL(10,2))
@@ -164,7 +215,7 @@ DELIMITER ;
 
 -- SELECT hitung_pajak(100000); -- Hasil: 10000
 
--- #10. Hitung Refund Pembatalan[DONE]
+-- #9. Hitung Refund Pembatalan[DONE]
 -- Menghitung nominal refund sesuai kebijakan (misal potongan 20% dari total).
 DELIMITER //
 CREATE FUNCTION hitung_refund(total DECIMAL(10,2))
@@ -180,7 +231,7 @@ DELIMITER ;
 
 
 
--- #11. Hitung Total Transaksi [DONE]
+-- #10. Hitung Total Transaksi [DONE]
 -- Menjumlahkan subtotal, pajak, biaya admin, dan dikurangi diskon jika ada.
 
 DELIMITER //
@@ -196,7 +247,7 @@ DELIMITER ;
 
 -- SELECT hitung_total(100000, 10000, 5000, 15000); -- Hasil: 100000
 
--- #12. Hitung Harga Kursi [DONE]
+-- #11. Hitung Harga Kursi [DONE]
 -- Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 DELIMITER //

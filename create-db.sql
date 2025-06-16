@@ -51,19 +51,6 @@ CREATE TABLE MEMBERSHIP (
     FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
 );
 
-CREATE TABLE TRANSAKSI (
-    id_transaksi CHAR(19) PRIMARY KEY,
-    total_biaya DECIMAL(10, 2) NOT NULL,
-    biaya_pajak DECIMAL(10, 2) NOT NULL,
-    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    pelanggan_id_pelanggan CHAR(5) NOT NULL,
-    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
-    teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
-    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
-    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
-);
-
 CREATE TABLE TEATER(
     id_teater CHAR(5) PRIMARY KEY,
     jumlah_kursi_tersedia INT NOT NULL,
@@ -86,6 +73,19 @@ CREATE TABLE MAKANAN_LOKASI_STUDIO (
     PRIMARY KEY (makanan_id_makanan, lokasi_studio_id_lokasi_studio),
     FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan),    
     FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+);
+
+CREATE TABLE TRANSAKSI (
+    id_transaksi CHAR(19) PRIMARY KEY,
+    total_biaya DECIMAL(10, 2) NOT NULL,
+    biaya_pajak DECIMAL(10, 2) NOT NULL,
+    tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pelanggan_id_pelanggan CHAR(5) NOT NULL,
+    jadwal_tayang_id_tayang CHAR(7) NOT NULL,
+    teater_id_teater CHAR(5) NOT NULL,
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
 );
 
 CREATE TABLE TRANSAKSI_MAKANAN (
@@ -139,5 +139,3 @@ CREATE TABLE log_notifikasi (
     pesan TEXT,
     waktu DATETIME
 );
-
-DELIMITER $$

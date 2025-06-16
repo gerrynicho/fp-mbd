@@ -152,57 +152,327 @@ CREATE TABLE KURSI(
 ### 1. Cek Membership Pelanggan
 Mengembalikan apakah pelanggan memiliki status membership berdasarkan ID pelanggan.
 
-```
--- #1 CEK MEMBERSHIP PELANGGAN [DONE]
+```sql
+--
 DELIMITER //
+
 CREATE FUNCTION cek_membership(p_id CHAR(5))
--- gk bisa deterministic gara" bisa aja function call before bikin membership baru
--- trus pas user bikin membership
--- function ini klo deterministic bakal kasi info salah
 RETURNS BOOLEAN
+READS SQL DATA
 BEGIN
     DECLARE status BOOL;
+
     SELECT EXISTS (
-        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = p_id
+        SELECT 1 
+        FROM MEMBERSHIP 
+        WHERE pelanggan_id_pelanggan = p_id
     ) INTO status;
+
     RETURN status;
 END;
 //
+
 DELIMITER ;
 ```
+```sql
+SELECT cek_membership('P0001') AS status_membership;
+SELECT cek_membership('P0025') AS status_membership;
+```
+![image](https://github.com/user-attachments/assets/33e0fa0f-e07a-4fe3-a601-c41f3187df41)
+
+![image](https://github.com/user-attachments/assets/ee6db324-757c-4921-9882-f381c491b800)
 
 ### 2. Validasi Masa Berlaku Promosi
 Mengecek apakah tanggal saat ini masih dalam rentang masa berlaku promosi.
 
+```sql
+DELIMITER //
+
+CREATE FUNCTION promosi_masih_berlaku(p_id CHAR(10))
+RETURNS BOOLEAN
+READS SQL DATA
+BEGIN
+    DECLARE status BOOL DEFAULT FALSE;
+
+    SELECT 
+        (CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir)
+    INTO 
+        status
+    FROM 
+        PROMOSI
+    WHERE 
+        id_promosi = p_id;
+
+    RETURN IFNULL(status, FALSE);
+END;
+//
+
+DELIMITER ;
+```
+```sql
+SELECT promosi_masih_berlaku('PR001') AS masih_berlaku;
+SELECT promosi_masih_berlaku('PR014') AS masih_berlaku;
+```
+![image](https://github.com/user-attachments/assets/028c2556-fe11-4b11-adba-c2bc6e8cb2a1)
+![image](https://github.com/user-attachments/assets/55c40ed0-934a-4c5a-9265-a0bbf7595377)
+
+![image](https://github.com/user-attachments/assets/e4d7fb4e-e2df-4c4b-afca-23608dbc2349)
+![image](https://github.com/user-attachments/assets/e23894be-6350-4444-9f19-44003dff49e1)
+
 ### 3. Hitung Total Penggunaan Promosi
 Mengembalikan total jumlah penggunaan promosi tertentu oleh semua pelanggan.
+
+```sql
+DELIMITER //
+
+CREATE FUNCTION total_penggunaan_promosi(p_id CHAR(10))
+RETURNS INT
+BEGIN
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*) 
+    INTO total
+    FROM PROMOSI_TRANSAKSI
+    WHERE promosi_id_promosi = p_id;
+
+    RETURN total;
+END;
+//
+
+DELIMITER ;
+
+```
+
+
+menambah dummy data
+```sql
+INSERT INTO PROMOSI_TRANSAKSI VALUES
+('TRX202506100002','PR014'),
+('TRX202506110001','PR014'),
+('TRX202506120001','PR014'),
+('TRX202506130001','PR011');
+```
+
+```sql
+SELECT total_penggunaan_promosi('PR014') AS jumlah_penggunaan;
+SELECT total_penggunaan_promosi('PR011') AS jumlah_penggunaan;
+
+```
+![image](https://github.com/user-attachments/assets/800e00f8-78e4-4c92-9503-2a93579356e5)
+
+![image](https://github.com/user-attachments/assets/b9a36bf8-f168-4a53-bff6-3286d8205989)
+
+![image](https://github.com/user-attachments/assets/70d3f28a-5351-49e5-8260-55aef3d09f74)
+
 
 ### 4. Kalkulasi Harga Setelah Promo
 Mengurangi harga awal dengan persentase atau nilai diskon dari promosi yang valid.
 
+```sql
+DELIMITER //
+
+CREATE FUNCTION harga_setelah_promo(p_id CHAR(10), harga_awal DECIMAL(10, 2))
+RETURNS DECIMAL(10,2)
+READS SQL DATA
+BEGIN
+    DECLARE diskon_persen DECIMAL(5,2);
+    DECLARE minimum INT;
+    DECLARE harga_akhir DECIMAL(10,2);
+
+    -- Ambil diskon dan syarat minimum_pembelian dari promosi yang masih berlaku
+    SELECT diskon, minimum_pembelian
+    INTO diskon_persen, minimum
+    FROM PROMOSI
+    WHERE id_promosi = p_id
+      AND CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir;
+
+    -- Jika promosi tidak ditemukan atau tidak berlaku
+    IF diskon_persen IS NULL OR minimum IS NULL THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Jika harga tidak memenuhi minimum pembelian, tidak dapat diskon
+    IF harga_awal < minimum THEN
+        RETURN harga_awal;
+    END IF;
+
+    -- Hitung harga akhir setelah diskon
+    SET harga_akhir = harga_awal - (harga_awal * (diskon_persen / 100));
+
+    RETURN harga_akhir;
+END;
+//
+
+DELIMITER ;
+
+```
+```sql
+SELECT harga_setelah_promo('PR014', 50000) AS harga_setelah_diskon;
+```
+jika memenuhi semua syarat, maka harga akan di potong diskon
+![image](https://github.com/user-attachments/assets/9caedac6-8c98-48b8-a711-a72598249365)
+![image](https://github.com/user-attachments/assets/ec5fe462-d7ed-4735-8d12-cf86d419160e)
+
+misalnya minimum pembelian tidka terpenuhi,
+```sql
+SELECT harga_setelah_promo('PR014', 10000) AS harga_setelah_diskon;
+```
+![image](https://github.com/user-attachments/assets/98ab5944-6d2f-4286-96d2-73b0e5b5a2c7)
+
+
 ### 5. Kalkulasi Harga Makanan dalam Keranjang
 Menghitung total harga makanan berdasarkan kuantitas dan harga satuan masing-masing item dalam keranjang.
 
-### 6. Kembalikan Stok Makanan
-Mengembalikan stok makanan ke jumlah awal apabila transaksi dibatalkan.
+```sql
 
-### 7. Cek Poin untuk Free Tiket
+DELIMITER //
+CREATE FUNCTION total_harga_keranjang(p_transaksi CHAR(19))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total DECIMAL(10,2);
+    SELECT SUM(m.harga * tm.jumlah)
+    INTO total
+    FROM TRANSAKSI_MAKANAN tm
+    JOIN MAKANAN m ON tm.makanan_id_makanan = m.id_makanan
+    WHERE tm.transaksi_id_transaksi = p_transaksi;
+    RETURN IFNULL(total, 0);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT total_harga_keranjang('TRX202506100001');
+SELECT total_harga_keranjang('TRX202506100002');
+
+```
+![image](https://github.com/user-attachments/assets/8e0d36ed-ad58-4430-ba22-29968924d826)
+![image](https://github.com/user-attachments/assets/00b3d965-97ce-43dd-943a-9ac426ea73c7)
+
+### 6. Cek Poin untuk Free Tiket
 Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
 
-### 8. Konversi Total Harga Menjadi Poin
+```sql
+DELIMITER //
+CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
+RETURNS INT
+BEGIN
+    DECLARE poin INT DEFAULT 0;
+
+    SELECT poin INTO poin
+    FROM MEMBERSHIP
+    WHERE TRIM(pelanggan_id_pelanggan) = TRIM(p_id);
+
+    RETURN FLOOR(poin / 100);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT jumlah_tiket_gratis('P0001');
+SELECT jumlah_tiket_gratis('P0002');
+```
+
+
+### 7. Konversi Total Harga Menjadi Poin
 Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
 
-### 9. Hitung Pajak
+
+```sql
+DELIMITER //
+CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    RETURN FLOOR(total / 25000);
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT harga_ke_poin(126000); -- Hasil: 5
+```
+![image](https://github.com/user-attachments/assets/eebe4ddc-1c71-4c3a-aecf-2b179cfed174)
+
+
+### 8. Hitung Pajak
 Menambahkan pajak (misal 10%) dari subtotal transaksi.
 
-### 10. Hitung Refund Pembatalan
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_pajak(subtotal DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN subtotal * 0.10;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_pajak(100000); -- Hasil: 10000
+```
+![image](https://github.com/user-attachments/assets/4730e60b-5814-4f4a-beae-002c5b8e3eb4)
+
+### 9. Hitung Refund Pembatalan
 Menghitung nominal refund sesuai kebijakan (misal potongan 20% dari total).
 
-### 11. Hitung Total Transaksi
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_refund(total DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN total * 0.80; -- Potongan 20%
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_refund(100000); -- Hasil: 80000
+```
+![image](https://github.com/user-attachments/assets/62819c35-9a26-4e7a-a65e-ab5ba29e9685)
+
+
+### 10. Hitung Total Transaksi
 Menjumlahkan subtotal, pajak, biaya admin, dan dikurangi diskon jika ada.
 
-### 12. Hitung Harga Kursi
+```sql
+DELIMITER //
+CREATE FUNCTION hitung_total(subtotal DECIMAL(10,2), pajak DECIMAL(10,2), biaya_admin DECIMAL(10,2), diskon DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN subtotal + pajak + biaya_admin - diskon;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT hitung_total(100000, 10000, 5000, 15000); -- Hasil: 100000
+```
+![image](https://github.com/user-attachments/assets/5ff4e8c1-d88b-4652-be7d-9555e73c0cfd)
+
+
+### 11. Hitung Harga Kursi
 Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
+
+```sql
+DELIMITER //
+CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN jumlah_kursi * harga_per_kursi;
+END;
+//
+DELIMITER ;
+```
+```sql
+SELECT harga_kursi(3, 45000); -- Hasil: 135000
+```
+![image](https://github.com/user-attachments/assets/06f6ced8-7f16-449c-8b50-fa670ebc4c0e)
+
 
 ---
 
@@ -210,12 +480,42 @@ Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 ### 1. Promosi untuk 10 Orang Pertama per Hari
 Trigger untuk membatasi promosi hanya berlaku untuk 10 transaksi pertama pada hari tersebut.
+![image|300](https://github.com/user-attachments/assets/5d0d9206-e410-4fe5-9251-525472ae8999)
+![image](https://github.com/user-attachments/assets/8e2d3552-b0f9-4651-b7de-fa612b457404)
+Promosi terganti jadi PR010
 
 ### 2. Trigger Stok Menipis
 Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
+![image|300](https://github.com/user-attachments/assets/2496e5ff-9ce2-4647-bcca-0bbcdd51762e)
+
+Testing
+
+<br><i>Untuk stok kurang dari 5</i> 
+```sql
+UPDATE makanan
+SET stok = (SELECT stok FROM makanan WHERE id_makanan = 'M0001') - 6
+WHERE id_makanan = 'M0001';
+```
+![image](https://github.com/user-attachments/assets/9354096e-f84e-4559-9cac-a357552bd2cc)
+
+Hasil
+
+<br>
+![image|300](https://github.com/user-attachments/assets/24e94b78-772a-44f9-8457-c195e1202ac9)
+
+
+
+<i>Untuk stok sama dengan 0</i> 
+
+<i>Untuk stok kurang dari 0</i> 
 
 ### 3. Diskon Tambahan untuk Membership
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
+![image](https://github.com/user-attachments/assets/0064f15e-1c3f-4395-b8c7-41a23dfd1d9a)
+![image](https://github.com/user-attachments/assets/7dd36021-a559-4b13-9cfd-a8ed815f80cd)
+
+
+
 
 ### 4. Tambah Poin saat Transaksi
 Setiap transaksi sukses akan menambahkan poin ke akun pelanggan berdasarkan nilai transaksi. Tiap 10.000 akan menambahkan 1 poin.
@@ -355,62 +655,59 @@ Mengembalikan daftar film yang sedang tayang oleh merk studio tertentu.
 ```
 DELIMITER $$
 
-CREATE PROCEDURE studio_menayangkan_film_apa_saja(
-    IN merk_studio_input VARCHAR(30)
-)
+CREATE PROCEDURE get_film_by_merk_studio(IN merk_input VARCHAR(30))
 BEGIN
-    SELECT DISTINCT
+    SELECT DISTINCT 
         F.id_film,
         F.judul_film,
         F.genre,
         F.durasi,
+        F.sutradara,
         F.rating_usia,
         F.rating_film,
-        L.merk_studio,
-        L.alamat_studio
-    FROM JADWAL_TAYANG JT
-    JOIN TEATER T ON JT.teater_id_teater = T.id_teater
-    JOIN LOKASI_STUDIO L ON T.lokasi_studio_id_lokasi_studio = L.id_lokasi_studio
+        F.sinopsis
+    FROM LOKASI_STUDIO LS
+    JOIN TEATER T ON LS.id_lokasi_studio = T.lokasi_studio_id_lokasi_studio
+    JOIN JADWAL_TAYANG JT ON T.id_teater = JT.teater_id_teater
     JOIN FILM F ON JT.film_id_film = F.id_film
-    WHERE L.merk_studio = merk_studio_input
-    ORDER BY F.judul_film;
+    WHERE LS.merk_studio = merk_input;
 END$$
 
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Input data yang diperlukan untuk testing untuk no 6-9
 
 ```
+INSERT INTO FILM VALUES
+('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.7, 'The final battle against Thanos.'),
+('F002', 'Frozen II', 'Animation', 103, 'Chris Buck', 'SU', 7.2, 'Elsa goes on a journey.'),
+('F003', 'Interstellar', 'Sci-Fi', 169, 'Christopher Nolan', '13+', 8.6, 'Journey through space and time.');
+
 INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
+('LS001', 'Jl. Sudirman No.1, Jakarta', '021123456', 'XXI'),
+('LS002', 'Jl. Asia Afrika No.99, Bandung', '022987654', 'Cinepolis'),
+('LS003', 'Jl. Gajah Mada No.22, Surabaya', '031112233', 'XXI');
 
 INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
+('T001', 100, 'LS001'),  -- XXI Jakarta
+('T002', 120, 'LS002'),  -- Cinepolis Bandung
+('T003', 90,  'LS003');  -- XXI Surabaya
 
 INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+('JDT001', '2025-06-16 14:00:00', 'F001', 'T001'),  -- Avengers @ XXI Jakarta
+('JDT002', '2025-06-16 17:00:00', 'F002', 'T002'),  -- Frozen @ Cinepolis Bandung
+('JDT003', '2025-06-16 20:00:00', 'F001', 'T003'),  -- Avengers @ XXI Surabaya
+('JDT004', '2025-06-17 13:00:00', 'F003', 'T003');  -- Interstellar @ XXI Surabaya
 ```
 
 Call procedure untuk menampilkan film yang ada di XXI
 
 ```
-CALL studio_menayangkan_film_apa_saja('XXI');
+CALL get_film_by_merk_studio('XXI');
 ```
 
-![image](https://github.com/user-attachments/assets/7218a66e-c037-4c42-b460-71dbd4af9fab)
+![image](https://github.com/user-attachments/assets/92a67403-9c06-4431-8f6b-b8b50662439a)
 
 ### 7. Teater Tempat Film Ditayangkan
 Menentukan film tertentu ditayangkan di teater mana dalam satu studio.
@@ -438,70 +735,86 @@ END$$
 DELIMITER ;
 ```
 
-Input data yang diperlukan untuk testing
+Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi LS001
 
 ```
-INSERT INTO LOKASI_STUDIO VALUES
-('L001', 'Jl. Sudirman No.1, Jakarta', '0211234567', 'XXI'),
-('L002', 'Jl. Diponegoro No.5, Bandung', '0227654321', 'Cineplex');
-
-INSERT INTO TEATER VALUES
-('T001', 100, 'L001'),
-('T002', 80, 'L001'),
-('T003', 120, 'L002');
-
-INSERT INTO FILM VALUES
-('F001', 'Avengers: Endgame', 'Action', 180, 'Russo Brothers', '13+', 8.9, 'Pertarungan akhir para Avengers.'),
-('F002', 'Finding Dory', 'Animation', 100, 'Andrew Stanton', 'SU', 8.0, 'Dory mencari keluarganya yang hilang.'),
-('F003', 'Inception', 'Sci-Fi', 148, 'Christopher Nolan', '17+', 8.8, 'Petualangan di dunia mimpi.');
-
-INSERT INTO JADWAL_TAYANG VALUES
-('J000001', '2025-06-15 14:00:00', 'F001', 'T001'),
-('J000002', '2025-06-15 17:00:00', 'F002', 'T001'),
-('J000003', '2025-06-15 19:00:00', 'F003', 'T003'),
-('J000004', '2025-06-16 13:00:00', 'F001', 'T002')
-('J000005', '2025-06-16 14:00:00', 'F001', 'T001'); 
+CALL teater_tempat_film_ditayangkan('F001', 'LS001');
 ```
 
-Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi L001
+![Screenshot 2025-06-16 201537](https://github.com/user-attachments/assets/6169767d-dbab-4fb4-9e81-ccbde8c90aa1)
+
+### 8. Jadwal Tayang di Lokasi Tertentu
+Menampilkan waktu tayang suatu film di lokasi tertentu.
 
 ```
-CALL teater_tempat_film_ditayangkan('F001', 'L001');
-```
-
-![image](https://github.com/user-attachments/assets/f8d51a99-6939-4bb8-a4b5-4677d08943da)
-
-
-### 8. Jadwal Tayang di Teater Tertentu
-Menampilkan waktu tayang suatu film di teater tertentu pada tanggal tertentu.
-
-```sql
 DELIMITER $$
-CREATE PROCEDURE jadwal_tayang_teater_tertentu(p_teater_id CHAR(5))
+
+CREATE PROCEDURE jadwal_tayang_film_lokasi(
+    IN p_judul_film VARCHAR(50),
+    IN p_id_lokasi CHAR(5)
+)
 BEGIN
-    SELECT jt.id_tayang, f.judul_film, jt.jadwal
+    SELECT 
+        jt.id_tayang,
+        f.judul_film,
+        jt.jadwal,
+        ls.alamat_studio,
+        t.id_teater
     FROM JADWAL_TAYANG jt
     JOIN FILM f ON jt.film_id_film = f.id_film
-    WHERE jt.teater_id_teater = p_teater_id;
-END $$
+    JOIN TEATER t ON jt.teater_id_teater = t.id_teater
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE f.judul_film = p_judul_film
+      AND ls.id_lokasi_studio = p_id_lokasi;
+END$$
+
 DELIMITER ;
 ```
+
+Menampilkan jadwal film Avengers: Endgame di lokasi LS001
+
+```
+CALL jadwal_tayang_film_lokasi('Avengers: Endgame', 'LS001');
+```
+
+ ![Screenshot 2025-06-16 202028](https://github.com/user-attachments/assets/cb4dbe1c-16a3-49a4-98a7-6a36a971f892)
 
 ### 9. Film Tersedia Berdasarkan Tanggal dan Lokasi
 Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipilih.
 
-```sql
+```
 DELIMITER $$
-CREATE PROCEDURE film_tersedia_tanggal_lokasi(p_tanggal DATE, p_lokasi_studio_id CHAR(5))
+
+CREATE PROCEDURE film_tersedia_tanggal_lokasi(
+    IN p_tanggal DATE,
+    IN p_id_lokasi CHAR(5)
+)
 BEGIN
-    SELECT f.id_film, f.judul_film, jt.jadwal
-    FROM FILM f
-    JOIN JADWAL_TAYANG jt ON f.id_film = jt.film_id_film
+    SELECT DISTINCT
+        f.id_film,
+        f.judul_film,
+        f.genre,
+        f.durasi,
+        f.sutradara,
+        f.rating_usia,
+        f.rating_film
+    FROM JADWAL_TAYANG jt
+    JOIN FILM f ON jt.film_id_film = f.id_film
     JOIN TEATER t ON jt.teater_id_teater = t.id_teater
-    WHERE DATE(jt.jadwal) = p_tanggal AND t.lokasi_studio_id_lokasi_studio = p_lokasi_studio_id;
-END $$
+    JOIN LOKASI_STUDIO ls ON t.lokasi_studio_id_lokasi_studio = ls.id_lokasi_studio
+    WHERE DATE(jt.jadwal) = p_tanggal
+      AND ls.id_lokasi_studio = p_id_lokasi;
+END$$
+
 DELIMITER ;
 ```
+Menampilkan film apa saja yang tayang pada 16 Juni 2025 di lokasi LS001
+
+```
+CALL film_tersedia_tanggal_lokasi('2025-06-16', 'LS001');
+```
+
+![Screenshot 2025-06-16 202239](https://github.com/user-attachments/assets/8c6ccf63-b1c9-4249-a1b7-df719b13fa48)
 
 ### 10. Pembatalan Transaksi
 Menghapus transaksi dan rollback kursi, makanan, dan promosi yang digunakan.
