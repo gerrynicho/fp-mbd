@@ -435,7 +435,7 @@ END$$
 DELIMITER ;
 ```
 
-Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi L001
+Call Procedure untuk menampilkan teater tempat film F001 ditayangkan di lokasi LS001
 
 ```
 CALL teater_tempat_film_ditayangkan('F001', 'LS001');
