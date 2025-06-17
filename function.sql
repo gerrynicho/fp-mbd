@@ -168,23 +168,33 @@ DELIMITER ;
 -- #6.  Cek Poin untuk Free Tiket [FAILED]
 -- Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
 DELIMITER //
-CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
-RETURNS INT
+
+CREATE FUNCTION cek_poin_gratis_tiket(p_id CHAR(5))
+RETURNS BOOLEAN
 BEGIN
-    DECLARE poin INT DEFAULT 0;
+    DECLARE jumlah_poin INT;
 
-    SELECT poin INTO poin
+    SELECT poin INTO jumlah_poin
     FROM MEMBERSHIP
-    WHERE TRIM(pelanggan_id_pelanggan) = TRIM(p_id);
+    WHERE pelanggan_id_pelanggan = p_id;
 
-    RETURN FLOOR(poin / 100);
+    -- Jika pelanggan tidak memiliki membership, tidak bisa tiket gratis
+    IF jumlah_poin IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Jika poin >= 100, tiket gratis
+    IF jumlah_poin >= 100 THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
 END;
 //
-DELIMITER ;
 
 
--- SELECT dapat_tiket_gratis('P0001'); ---OUTPUTNYA HARUSNYA 1
--- SELECT dapat_tiket_gratis('P0002');
+-- SELECT cek_poin_gratis_tiket('P0001') AS status_tiket_gratis;
+
 
 
 -- #7. Konversi Total Harga Menjadi Poin [DONE]
