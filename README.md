@@ -672,18 +672,106 @@ Trigger untuk membebaskan kursi setelah film selesai, dengan mekanisme yang lebi
 ### 1. Top 3 Makanan Terlaris per Kategori
 Mengembalikan 3 makanan dengan jumlah penjualan tertinggi di tiap kategori (minuman, popcorn, makanan berat, dll).
 
+```
+DELIMITER $$
+CREATE PROCEDURE top_makanan_terlaris_per_kategori()
+BEGIN
+    SELECT m.klasifikasi, m.nama, SUM(tm.jumlah) AS total_terjual
+    FROM MAKANAN m
+    JOIN TRANSAKSI_MAKANAN tm ON m.id_makanan = tm.makanan_id_makanan
+    GROUP BY m.klasifikasi, m.nama
+    ORDER BY total_terjual DESC
+    LIMIT 3;
+END $$
+DELIMITER ;
+```
+
+
 ### 2. Film Paling Populer
 Mengembalikan film dengan jumlah penonton terbanyak (berdasarkan transaksi tiket).
+
+```
+DELIMITER $$
+CREATE PROCEDURE film_paling_banyak_ditonton()
+BEGIN
+    SELECT f.id_film, f.judul_film, COUNT(jt.id_tayang) AS jumlah_penonton
+    FROM FILM f
+    JOIN JADWAL_TAYANG jt ON f.id_film = jt.film_id_film
+    JOIN KURSI k ON jt.teater_id_teater = k.teater_id_teater
+    WHERE k.sedia = FALSE -- Kursi yang sudah dipesan
+    GROUP BY f.id_film, f.judul_film
+    ORDER BY jumlah_penonton DESC
+END $$
+```
 
 ### 3. Pelanggan dengan Transaksi Terbanyak
 
 Mengambil pelanggan dengan jumlah transaksi terbanyak sepanjang waktu.
 
+```
+DELIMITER $$
+CREATE PROCEDURE pelanggan_transaksi_terbanyak()
+BEGIN
+    SELECT p.id_pelanggan, p.nama, COUNT(t.id_transaksi) AS jumlah_transaksi
+    FROM PELANGGAN p
+    JOIN TRANSAKSI t ON p.id_pelanggan = t.pelanggan_id_pelanggan
+    GROUP BY p.id_pelanggan
+    ORDER BY jumlah_transaksi DESC
+END $$
+DELIMITER ;
+```
+
 ### 4. Prosedur Transaksi Lengkap
 Menyisipkan data ke tabel `transaksi`, `transaksi_makanan`, `promosi_transaksi` secara konsisten dan atomik (menggunakan transaksi SQL).
 
+```
+CREATE PROCEDURE create_transaksi(
+    IN p_biaya DECIMAL(10, 2),
+    IN p_pelanggan_id CHAR(5),
+    IN p_jadwal_tayang_id CHAR(7),
+    IN p_teater_id CHAR(5),
+    IN promosi_id CHAR(10) DEFAULT NULL,
+)
+BEGIN
+    DECLARE new_transaksi_id CHAR(19);
+    DECLARE total DECIMAL(10, 2);
+
+    SET new_transaksi_id = get_next_trx_id();
+    SET total = calculate_transaction_total(
+        p_biaya,
+        2000.00,
+        0, -- diskon, bisa diubah sesuai kebutuhan
+        new_transaksi_id
+    );
+
+    INSERT INTO TRANSAKSI (
+        id_transaksi,
+        total_biaya,
+        tanggal_transaksi,
+        pelanggan_id_pelanggan,
+        jadwal_tayang_id_tayang,
+        teater_id_teater
+    ) VALUES (
+        new_transaksi_id,
+
+END $$
+DELIMITER ;
+```
+
 ### 5. Studio Menjual Makanan Apa Saja
 Mengembalikan daftar makanan yang tersedia di lokasi studio tertentu.
+
+```
+DELIMITER $$
+CREATE PROCEDURE lokasi_studio_makanan()
+BEGIN
+    SELECT ls.id_lokasi_studio, ls.merk_studio, m.id_makanan, m.nama, m.harga
+    FROM LOKASI_STUDIO ls
+    JOIN MAKANAN_LOKASI_STUDIO mls ON ls.id_lokasi_studio = mls.lokasi_studio_id_lokasi_studio
+    JOIN MAKANAN m ON mls.makanan_id_makanan = m.id_makanan;
+END $$
+DELIMITER ;
+```
 
 ### 6. Studio Menayangkan Film Apa Saja
 Mengembalikan daftar film yang sedang tayang oleh merk studio tertentu.
