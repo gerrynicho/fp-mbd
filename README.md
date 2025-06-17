@@ -11,6 +11,7 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
+- [PDM CDM](#pdm-cdm)
   - [📊 Database Schema Overview](#-database-schema-overview)
     - [Recent Schema Updates (Version 2.0)](#recent-schema-updates-version-20)
       - [🔄 **Perubahan Utama:**](#-perubahan-utama)
@@ -58,7 +59,11 @@
     - [📁 Table: `Pelanggan`](#-table-pelanggan)
     - [📁 Table: `Transaksi`](#-table-transaksi)
     - [📁 Table: `Detail_Transaksi`](#-table-detail_transaksi)
-  
+
+# PDM CDM
+**PDM**
+![Manajemen_Tix ID_Physical_Export_MBD-2025-06-17_12-45](https://github.com/user-attachments/assets/c1034715-d5a9-4420-9eb1-a43fd4c03451)
+
 # 🎬 Bioskop Database Design – Fitur & Indexing
 
 ## 🧠 Function
