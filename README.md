@@ -10,16 +10,8 @@
 
 # Table of Contents
 - [Table of Contents](#table-of-contents)
-- [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
 - [PDM CDM](#pdm-cdm)
-  - [📊 Database Schema Overview](#-database-schema-overview)
-    - [Recent Schema Updates (Version 2.0)](#recent-schema-updates-version-20)
-      - [🔄 **Perubahan Utama:**](#-perubahan-utama)
-      - [🗃️ **Tabel Baru:**](#️-tabel-baru)
-      - [🔧 **Tabel Yang Diperbarui:**](#-tabel-yang-diperbarui)
-  - [🔄 Schema Migration Benefits](#-schema-migration-benefits)
-    - [Keuntungan Schema Baru:](#keuntungan-schema-baru)
-    - [Migration Notes:](#migration-notes)
+- [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
   - [🧠 Function](#-function)
     - [1. Cek Membership Pelanggan](#1-cek-membership-pelanggan)
     - [2. Validasi Masa Berlaku Promosi](#2-validasi-masa-berlaku-promosi)
@@ -32,13 +24,13 @@
     - [9. Hitung Refund Pembatalan](#9-hitung-refund-pembatalan)
     - [10. Hitung Total Transaksi](#10-hitung-total-transaksi)
     - [11. Hitung Harga Kursi](#11-hitung-harga-kursi)
+    - [12. Hitung Pelanggan](#12-hitung-pelanggan)
   - [⚡ Trigger](#-trigger)
     - [1. Promosi untuk 10 Orang Pertama per Hari](#1-promosi-untuk-10-orang-pertama-per-hari)
     - [2. Trigger Stok Menipis](#2-trigger-stok-menipis)
     - [3. Diskon Tambahan untuk Membership](#3-diskon-tambahan-untuk-membership)
     - [4. Tambah Poin saat Transaksi](#4-tambah-poin-saat-transaksi)
     - [5. Trigger Pesan Kursi](#5-trigger-pesan-kursi)
-    - [6. Trigger Kosongkan Kursi Setelah Film](#6-trigger-kosongkan-kursi-setelah-film)
   - [🧩 Stored Procedure](#-stored-procedure)
     - [1. Top 3 Makanan Terlaris per Kategori](#1-top-3-makanan-terlaris-per-kategori)
     - [2. Film Paling Populer](#2-film-paling-populer)
@@ -50,7 +42,6 @@
     - [8. Jadwal Tayang di Lokasi Tertentu](#8-jadwal-tayang-di-lokasi-tertentu)
     - [9. Film Tersedia Berdasarkan Tanggal dan Lokasi](#9-film-tersedia-berdasarkan-tanggal-dan-lokasi)
     - [10. Pembatalan Transaksi](#10-pembatalan-transaksi)
-    - [11. Edit Transaksi (Pindah Kursi/Jadwal)](#11-edit-transaksi-pindah-kursijadwal)
   - [🗂️ Index](#️-index)
     - [📁 Table: `Film`](#-table-film)
     - [📁 Table: `Jadwal_Tayang`](#-table-jadwal_tayang)
@@ -912,7 +903,7 @@ CALL teater_tempat_film_ditayangkan('F001', 'LS001');
 ### 8. Jadwal Tayang di Lokasi Tertentu
 Menampilkan waktu tayang suatu film di lokasi tertentu.
 
-```
+```sql
 DELIMITER $$
 
 CREATE PROCEDURE jadwal_tayang_film_lokasi(
@@ -939,7 +930,7 @@ DELIMITER ;
 
 Menampilkan jadwal film Avengers: Endgame di lokasi LS001
 
-```
+```sql
 CALL jadwal_tayang_film_lokasi('Avengers: Endgame', 'LS001');
 ```
 
@@ -948,7 +939,7 @@ CALL jadwal_tayang_film_lokasi('Avengers: Endgame', 'LS001');
 ### 9. Film Tersedia Berdasarkan Tanggal dan Lokasi
 Menyediakan daftar film yang tersedia pada tanggal dan lokasi studio yang dipilih.
 
-```
+```sql
 DELIMITER $$
 
 CREATE PROCEDURE film_tersedia_tanggal_lokasi(
@@ -976,7 +967,7 @@ DELIMITER ;
 ```
 Menampilkan film apa saja yang tayang pada 16 Juni 2025 di lokasi LS001
 
-```
+```sql
 CALL film_tersedia_tanggal_lokasi('2025-06-16', 'LS001');
 ```
 
@@ -1088,7 +1079,7 @@ CALL pembatalan_transaksi('TRX0001');
   - `genre`, `rating_usia`, `sutradara`: **Dense Indexing**
   - `id_film`: **Sparse Indexing**
  
-```
+```sql
 ALTER TABLE FILM
     ADD INDEX idx_id_film(id_film),
     ADD INDEX idx_genre(genre),
@@ -1105,7 +1096,7 @@ ALTER TABLE FILM
   - `film_id_film`: untuk menampilkan seluruh jadwal dari satu film.
 - **Jenis Indexing:** **Sparse Indexing**
 
-```
+```sql
 ALTER TABLE JADWAL_TAYANG
     ADD INDEX idx_id_tayang(id_tayang),
     ADD INDEX idx_id_film_jadwal(film_id_film),
@@ -1122,7 +1113,7 @@ ALTER TABLE JADWAL_TAYANG
   - `row_kursi`: **Dense Indexing**
   - `column_kursi`: **Sparse Indexing** (dalam kombinasi)
 
-```
+```sql
 ALTER TABLE KURSI
     ADD INDEX idx_kursi(row_kursi, column_kursi);
 ```
@@ -1135,7 +1126,7 @@ ALTER TABLE KURSI
   - Untuk pencarian berdasarkan lokasi atau nama studio yang panjang (VARCHAR/TEXT).
 - **Jenis Indexing:** **Dense Indexing**
 
-```
+```sql
 ALTER TABLE LOKASI_STUDIO
     ADD INDEX idx_alamat(alamat_studio),
     ADD INDEX idx_merk_studio(merk_studio);
@@ -1149,7 +1140,7 @@ ALTER TABLE LOKASI_STUDIO
   - Untuk pencarian cepat saat login, mengecek transaksi, atau status membership.
 - **Jenis Indexing:** **Sparse Indexing**
 
-```
+```sql
 ALTER TABLE PELANGGAN
     ADD INDEX idx_id_pelanggan(id_pelanggan),
     ADD INDEX idx_nama(nama);
@@ -1164,7 +1155,7 @@ ALTER TABLE PELANGGAN
   - `pelanggan_id_pelanggan`: untuk query yang berkaitan dengan history pelanggan
 - **Jenis Indexing:** **Sparse Indexing**
 
-```
+```sql
 ALTER TABLE TRANSAKSI
     ADD INDEX idx_tanggal_transaksi(tanggal_transaksi),
     ADD INDEX idx_pelanggan(pelanggan_id_pelanggan);
@@ -1179,7 +1170,7 @@ ALTER TABLE TRANSAKSI
   - `kursi_id_kursi`: untuk mengecek status kursi dan riwayat pemakaian
 - **Jenis Indexing:** **Sparse Indexing**
 
-```
+```sql
 ALTER TABLE DETAIL_TRANSAKSI
     ADD INDEX idx_transaksi_detail(transaksi_id_transaksi),
     ADD INDEX idx_kursi_detail(kursi_id_kursi);
