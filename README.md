@@ -520,13 +520,72 @@ SELECT harga_kursi(3, 45000); -- Hasil: 135000
 
 ### 1. Promosi untuk 10 Orang Pertama per Hari
 Trigger untuk membatasi promosi hanya berlaku untuk 10 transaksi pertama pada hari tersebut.
+```sql
+DELIMITER $$
+-- #1
+-- Trigger untuk menambahkan promosi hanya jika pelanggan masuk 10 orang pertama
+-- menurutku ini harus refactor buat bikin count jadi sistem variabel
+CREATE TRIGGER trg_diskon_10_orang
+BEFORE INSERT ON PROMOSI_TRANSAKSI
+FOR EACH ROW
+BEGIN 
+    DECLARE jumlah INTEGER DEFAULT 0;
+
+    SET jumlah = hitung_pelanggan_hari_ini(CURDATE());
+    IF jumlah <= 10 THEN
+        SET NEW.promosi_id_promosi = 'PR010';
+    END IF;
+END $$
+
+DELIMITER ;
+```
 ![image|300](https://github.com/user-attachments/assets/5d0d9206-e410-4fe5-9251-525472ae8999)
+
+<br>Testing<br>
+```sql
+select * from promosi_transaksi
+```
 ![image](https://github.com/user-attachments/assets/8e2d3552-b0f9-4651-b7de-fa612b457404)
 Promosi terganti jadi PR010
 
 ### 2. Trigger Stok Menipis
 Mengirimkan notifikasi atau log jika stok makanan < ambang batas tertentu.
 ![image|300](https://github.com/user-attachments/assets/2496e5ff-9ce2-4647-bcca-0bbcdd51762e)
+```sql
+-- #2
+-- trigger stok menipis [DONE]
+DELIMITER $$
+
+CREATE TRIGGER trg_low_stok
+BEFORE UPDATE ON MAKANAN
+FOR EACH ROW 
+BEGIN 
+    -- Error: stok tidak boleh negatif
+    IF NEW.stok < 0 THEN 
+        INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
+        VALUES (NEW.id_makanan, 'ERROR', 'Stok tidak mencukupi', NOW());
+
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Error: Stok tidak mencukupi';
+
+    -- Warning: stok kosong (update tetap dilakukan)
+    ELSEIF NEW.stok = 0 THEN 
+        INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok kosong', NOW());
+        -- No SIGNAL so update continues
+
+    -- Notice: stok rendah (<= 5), update tetap dilakukan
+    ELSEIF NEW.stok <= 5 THEN 
+        INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
+        VALUES (NEW.id_makanan, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
+        -- No SIGNAL so update continues
+    END IF;
+END$$
+
+DELIMITER ;
+
+```
+
 
 Testing
 
@@ -538,16 +597,37 @@ WHERE id_makanan = 'M0001';
 ```
 ![image](https://github.com/user-attachments/assets/9354096e-f84e-4559-9cac-a357552bd2cc)
 
-Hasil
+Hasil <br>
 
-<br>
-![image|300](https://github.com/user-attachments/assets/24e94b78-772a-44f9-8457-c195e1202ac9)
+![image](https://github.com/user-attachments/assets/29a4fc57-90b5-4ff2-9291-605092faa03e)
 
 
 
 <i>Untuk stok sama dengan 0</i> 
+Testing <br>
+
+```sql
+UPDATE makanan
+SET stok = (SELECT stok FROM makanan WHERE id_makanan = 'M0001') - 4
+WHERE id_makanan = 'M0001';
+```
+
+Hasil <br>
+![image](https://github.com/user-attachments/assets/1bed5aec-cee6-4761-9d7a-8a46b68e5011)
+
 
 <i>Untuk stok kurang dari 0</i> 
+Testing <br>
+```sql
+UPDATE makanan
+SET stok = (SELECT stok FROM makanan WHERE id_makanan = 'M0001') - 2
+WHERE id_makanan = 'M0001';
+```
+
+Hasil <br>
+![image](https://github.com/user-attachments/assets/4f43d311-b3a3-469d-860a-cd9b4961d635)
+
+
 
 ### 3. Diskon Tambahan untuk Membership
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
