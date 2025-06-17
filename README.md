@@ -1,3 +1,7 @@
+---
+Author: Gerry Nicholas - 5025231017, Nicholas - 5025231031, Imelda Alexis Jovita, 5025231032, Karla Vania Widjanarko - 5025231123
+Kelompok: F04
+---
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
