@@ -698,9 +698,6 @@ SELECT id_kursi, sedia FROM KURSI WHERE id_kursi = 'K001';
 
 ![Screenshot 2025-06-16 211235](https://github.com/user-attachments/assets/d2b5147e-50f5-46fb-8331-b77e27de180f)
 
-### 6. Trigger Kosongkan Kursi Setelah Film
-Trigger untuk membebaskan kursi setelah film selesai, dengan mekanisme yang lebih efisien.
-
 ## 🧩 Stored Procedure
 
 ### 1. Top 3 Makanan Terlaris per Kategori
