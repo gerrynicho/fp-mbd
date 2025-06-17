@@ -1006,6 +1006,22 @@ END $$
 DELIMITER ;
 ```
 
+**Sebelum pembatalan**
+![image](https://github.com/user-attachments/assets/a9c16666-b4ea-473b-a8fa-381fc7b64204)
+![image](https://github.com/user-attachments/assets/3ff39dc6-6d4a-40fb-b4c4-e8c88bf38ffb)
+
+**Pembatalan**
+```sql
+CALL pembatalan_transaksi('TRX0001');
+```
+
+**Sesudah pembatalan**
+![image](https://github.com/user-attachments/assets/ac899ce0-bf0b-45e0-8708-67aa1234db84)
+![image](https://github.com/user-attachments/assets/493fc9af-808e-4f54-ae05-342581be8657)
+
+
+
+
 ## 🗂️ Index
 
 ### 📁 Table: `Film`
