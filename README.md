@@ -384,27 +384,55 @@ DELIMITER ;
 ```sql
 SELECT cek_poin_gratis_tiket('P0001') AS status_tiket_gratis;
 ```
+![image](https://github.com/user-attachments/assets/0f4e4ef9-41d3-42bf-a25a-0561025e0df9)
+
 
 
 ### 7. Konversi Total Harga Menjadi Poin
-Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
+Mengubah total harga transaksi menjadi poin, setiap Rp25.000 = 1 poin.
 
 
 ```sql
 DELIMITER //
-CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
+
+CREATE FUNCTION konversi_poin_dari_transaksi(p_id_transaksi CHAR(19))
 RETURNS INT
-DETERMINISTIC
+READS SQL DATA
 BEGIN
+    DECLARE total DECIMAL(10,2);
+    DECLARE id_pelanggan CHAR(5);
+    DECLARE punya_membership BOOL;
+
+    -- Ambil total biaya dan id pelanggan dari transaksi
+    SELECT total_biaya, pelanggan_id_pelanggan
+    INTO total, id_pelanggan
+    FROM TRANSAKSI
+    WHERE id_transaksi = p_id_transaksi;
+
+    -- Cek apakah pelanggan memiliki membership
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = id_pelanggan
+    ) INTO punya_membership;
+
+    -- Jika tidak punya membership, return 0 poin
+    IF NOT punya_membership THEN
+        RETURN 0;
+    END IF;
+
+    -- Hitung poin: setiap 25.000 = 1 poin
     RETURN FLOOR(total / 25000);
 END;
 //
+
 DELIMITER ;
+
 ```
 ```sql
-SELECT harga_ke_poin(126000); -- Hasil: 5
+SELECT konversi_poin_dari_transaksi('TRX202506110001');
 ```
-![image](https://github.com/user-attachments/assets/eebe4ddc-1c71-4c3a-aecf-2b179cfed174)
+![image](https://github.com/user-attachments/assets/0dfc1a14-7b2b-4292-9c2d-8978665fa6e2)
+
+![image](https://github.com/user-attachments/assets/49d94845-5c6b-40f8-b21a-4eb813d17979)
 
 
 ### 8. Hitung Pajak
