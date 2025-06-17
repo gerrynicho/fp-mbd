@@ -1005,6 +1005,51 @@ END $$
 
 DELIMITER ;
 ```
+**Insertion**
+```sql
+-- 1. Lokasi Studio
+INSERT INTO LOKASI_STUDIO (id_lokasi_studio, alamat_studio, no_telp, merk_studio)
+VALUES ('L001', 'Jl. Studio 1', '021123456', 'CineX');
+
+-- 2. Teater
+INSERT INTO TEATER (id_teater, jumlah_kursi_tersedia, lokasi_studio_id_lokasi_studio)
+VALUES ('T001', 100, 'L001');
+
+-- 3. Kursi
+INSERT INTO KURSI (id_kursi, row_kursi, column_kursi, harga_kursi, sedia, teater_id_teater)
+VALUES 
+('K001', 'A', 1, 50000, FALSE, 'T001'),
+('K002', 'A', 2, 50000, FALSE, 'T001'),
+('K003', 'A', 3, 50000, TRUE, 'T001');
+
+-- 4. Pelanggan
+INSERT INTO PELANGGAN (id_pelanggan, nama, no_telepon, pass)
+VALUES ('P001', 'John Doe', '081234567890', 'secret');
+
+-- 5. Film
+INSERT INTO FILM (id_film, judul_film, genre, durasi, sutradara, rating_usia, rating_film, sinopsis)
+VALUES ('F001', 'Test Movie', 'Action', 120, 'Director', '13+', 8.5, 'An action-packed film.');
+
+-- 6. Jadwal Tayang
+INSERT INTO JADWAL_TAYANG (id_tayang, jadwal, film_id_film, teater_id_teater)
+VALUES ('J001', '2025-06-17 18:00:00', 'F001', 'T001');
+
+-- 7. Transaksi
+INSERT INTO TRANSAKSI (id_transaksi, total_biaya, tanggal_transaksi, pelanggan_id_pelanggan, jadwal_tayang_id_tayang, teater_id_teater)
+VALUES ('TRX0001', 100000, NOW(), 'P001', 'J001', 'T001');
+
+-- 8. Detail Transaksi
+INSERT INTO DETAIL_TRANSAKSI (id_detail_transaksi, transaksi_id_transaksi, kursi_id_kursi)
+VALUES 
+('DT001', 'TRX0001', 'K001'),
+('DT002', 'TRX0001', 'K002');
+
+-- 9. Kursi Jadwal
+INSERT INTO KURSI_JADWAL_TAYANG (kursi_id_kursi, jadwal_tayang_id_tayang)
+VALUES 
+('K001', 'J001'),
+('K002', 'J001');
+```
 
 **Sebelum pembatalan**
 ![image](https://github.com/user-attachments/assets/a9c16666-b4ea-473b-a8fa-381fc7b64204)
@@ -1018,6 +1063,8 @@ CALL pembatalan_transaksi('TRX0001');
 **Sesudah pembatalan**
 ![image](https://github.com/user-attachments/assets/ac899ce0-bf0b-45e0-8708-67aa1234db84)
 ![image](https://github.com/user-attachments/assets/493fc9af-808e-4f54-ae05-342581be8657)
+
+
 
 
 
