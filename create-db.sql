@@ -110,6 +110,7 @@ CREATE TABLE KURSI(
     id_kursi CHAR(5) PRIMARY KEY,
     row_kursi CHAR(1) NOT NULL,
     column_kursi INT NOT NULL,
+    harga_kursi DECIMAL(10, 2) NOT NULL,
     sedia BOOLEAN NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
     FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
