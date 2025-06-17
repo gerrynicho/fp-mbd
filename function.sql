@@ -1,21 +1,3 @@
--- HITUNG PELANGGAN HARI INI
-DELIMITER $$
-CREATE FUNCTION hitung_pelanggan_hari_ini(p_date DATE) 
-RETURNS INTEGER  
-DETERMINISTIC
-BEGIN 
-    DECLARE jumlah_pelanggan_hari_ini INT;
-
-    SELECT COUNT(DISTINCT pelanggan_id_pelanggan)
-    INTO jumlah_pelanggan_hari_ini
-    FROM TRANSAKSI t
-    WHERE DATE(t.tanggal_transaksi) = current_date;
-
-    RETURN jumlah_pelanggan_hari_ini;
-END $$
-DELIMITER ;
-
-
 -- #1 CEK MEMBERSHIP PELANGGAN [DONE]
 DELIMITER $$
 CREATE FUNCTION cek_membership(p_id CHAR(5))
@@ -255,6 +237,35 @@ BEGIN
 END$$
 DELIMITER ;
 -- SELECT hitung_total(100000, 10000, 5000, 'TRX202506100001'); -- Example usage
+
+-- #11 Hitung Harga Kursi
+DELIMITER $$
+CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN jumlah_kursi * harga_per_kursi;
+END//
+DELIMITER ;
+-- SELECT harga_kursi(3, 45000); -- Hasil: 135000
+
+-- #12 HITUNG PELANGGAN HARI INI [DONE]
+DELIMITER $$
+CREATE FUNCTION hitung_pelanggan_hari_ini(p_date DATE) 
+RETURNS INTEGER  
+DETERMINISTIC
+BEGIN 
+    DECLARE jumlah_pelanggan_hari_ini INT;
+
+    SELECT COUNT(DISTINCT pelanggan_id_pelanggan)
+    INTO jumlah_pelanggan_hari_ini
+    FROM TRANSAKSI t
+    WHERE DATE(t.tanggal_transaksi) = p_date;
+
+    RETURN jumlah_pelanggan_hari_ini;
+END $$
+DELIMITER ;
+-- SELECT hitung_pelanggan_hari_ini(CURDATE()) AS jumlah_pelanggan_hari_ini
 
 -- #13. Calculate total for a transaction using only its ID
 DELIMITER $$
