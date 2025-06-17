@@ -35,10 +35,10 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE top_makanan_terlaris_per_kategori()
 BEGIN
-    SELECT m.kategori, m.nama_makanan, SUM(tm.jumlah) AS total_terjual
+    SELECT m.klasifikasi, m.nama, SUM(tm.jumlah) AS total_terjual
     FROM MAKANAN m
     JOIN TRANSAKSI_MAKANAN tm ON m.id_makanan = tm.makanan_id_makanan
-    GROUP BY m.kategori, m.nama_makanan
+    GROUP BY m.klasifikasi, m.nama
     ORDER BY total_terjual DESC
     LIMIT 3;
 END $$
@@ -48,12 +48,12 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE film_paling_banyak_ditonton()
 BEGIN
-    SELECT f.id_film, f.judul, COUNT(jt.id_jadwal) AS jumlah_penonton
+    SELECT f.id_film, f.judul_film, COUNT(jt.id_tayang) AS jumlah_penonton
     FROM FILM f
     JOIN JADWAL_TAYANG jt ON f.id_film = jt.film_id_film
-    JOIN KURSI k ON jt.studio_id_studio = k.studio_id_studio
+    JOIN KURSI k ON jt.teater_id_teater = k.teater_id_teater
     WHERE k.sedia = FALSE -- Kursi yang sudah dipesan
-    GROUP BY f.id_film, f.judul
+    GROUP BY f.id_film, f.judul_film
     ORDER BY jumlah_penonton DESC
 END $$
 
@@ -78,15 +78,27 @@ CREATE PROCEDURE create_transaksi(
     IN promosi_id CHAR(10) DEFAULT NULL,
 )
 BEGIN
-    DECLARE pajak DECIMAL(10, 2);
-    DECLARE promo DECIMAL(10, 2) DEFAULT 0;
+    DECLARE new_transaksi_id CHAR(19);
+    DECLARE total DECIMAL(10, 2);
 
-    IF cek_membership(p_pelanggan_id) THEN
-        UPDATE membership
-        SET poin = poin + harga_ke_poin(p_biaya)
-        WHERE pelanggan_id_pelanggan = p_pelanggan_id;
-    END IF;
-    
+    SET new_transaksi_id = get_next_trx_id();
+    SET total = calculate_transaction_total(
+        p_biaya,
+        2000.00,
+        0, -- diskon, bisa diubah sesuai kebutuhan
+        new_transaksi_id
+    );
+
+    INSERT INTO TRANSAKSI (
+        id_transaksi,
+        total_biaya,
+        tanggal_transaksi,
+        pelanggan_id_pelanggan,
+        jadwal_tayang_id_tayang,
+        teater_id_teater
+    ) VALUES (
+        new_transaksi_id,
+
 END $$
 DELIMITER ;
 
