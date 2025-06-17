@@ -135,22 +135,6 @@ DELIMITER ;
 
 -- #6.  Cek Poin untuk Free Tiket [FAILED]
 -- Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
-<<<<<<< HEAD
--- DELIMITER $$
--- CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
--- RETURNS INT
--- BEGIN
---     DECLARE poin INT DEFAULT 0;
-
---     SELECT poin INTO poin
---     FROM MEMBERSHIP
---     WHERE TRIM(pelanggan_id_pelanggan) = TRIM(p_id);
-
---     RETURN FLOOR(poin / 100);
--- END;
--- $$
--- DELIMITER ;
-=======
 DELIMITER //
 
 CREATE FUNCTION cek_poin_gratis_tiket(p_id CHAR(5))
@@ -175,7 +159,6 @@ BEGIN
     END IF;
 END;
 //
->>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 
 
 -- SELECT cek_poin_gratis_tiket('P0001') AS status_tiket_gratis;
@@ -184,14 +167,9 @@ END;
 
 -- #7. Konversi Total Harga Menjadi Poin [DONE]
 -- Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
-<<<<<<< HEAD
-DELIMITER $$
-CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
-=======
 DELIMITER //
 
 CREATE FUNCTION konversi_poin_dari_transaksi(p_id_transaksi CHAR(19))
->>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 RETURNS INT
 READS SQL DATA
 BEGIN
@@ -217,18 +195,12 @@ BEGIN
 
     -- Hitung poin: setiap 25.000 = 1 poin
     RETURN FLOOR(total / 25000);
-<<<<<<< HEAD
-END$$
-DELIMITER ;
--- SELECT harga_ke_poin(126000); -- Hasil: 5
-=======
 END;
 //
 
 DELIMITER ;
 
 -- SELECT konversi_poin_dari_transaksi('TRX202506110001');
->>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 
 -- #8, Hitung Pajak
 -- Menambahkan pajak (misal 10%) dari subtotal transaksi.
