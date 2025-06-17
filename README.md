@@ -449,6 +449,54 @@ select hitung_pelanggan_hari_ini(CURDATE()) AS jumlah_pelanggan_hari_ini
 Hasil
 ![WhatsApp Image 2025-06-17 at 12 08 37_a1f7c757](https://github.com/user-attachments/assets/4aebbe8a-5c0d-4d4a-a733-b6a14a6f75f1)
 
+### 13. Mendapatkan transaksi id berikutnya
+
+```
+DELIMITER $$
+CREATE FUNCTION get_next_trx_id()
+RETURNS CHAR(19)
+READS SQL DATA
+BEGIN
+    DECLARE max_num INT DEFAULT 0;
+    DECLARE next_id CHAR(19);
+    DECLARE today_prefix CHAR(11);
+    
+    -- Create today's prefix: TRX + YYYYMMDD format
+    SET today_prefix = CONCAT('TRX', DATE_FORMAT(CURDATE(), '%Y%m%d'));
+    
+    -- Get the highest existing transaction number for today
+    -- Corrected SUBSTRING position from 16 to 12
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_transaksi, 12) AS UNSIGNED)), 0) 
+    INTO max_num
+    FROM TRANSAKSI 
+    WHERE id_transaksi LIKE CONCAT(today_prefix, '%');
+    
+    -- Increment by 1 and format with leading zeros (4 digits)
+    SET next_id = CONCAT(today_prefix, LPAD(max_num + 1, 4, '0'));
+    
+    RETURN next_id;
+END$$
+DELIMITER ;
+```
+
+### 14. Mendapatkan transaksi id saat ini
+
+```
+DELIMITER $$
+CREATE FUNCTION get_current_trx_id() 
+RETURNS CHAR(19)
+BEGIN
+    DECLARE current_id CHAR(19);
+    SELECT id_transaksi
+    INTO current_id
+    FROM TRANSAKSI
+    ORDER BY id_transaksi DESC
+    LIMIT 1;
+    RETURN current_id;
+END$$
+DELIMITER ;
+```
+
 
 
 ## ⚡ Trigger
@@ -1072,10 +1120,153 @@ CALL pembatalan_transaksi('TRX0001');
 ![image](https://github.com/user-attachments/assets/ac899ce0-bf0b-45e0-8708-67aa1234db84)
 ![image](https://github.com/user-attachments/assets/493fc9af-808e-4f54-ae05-342581be8657)
 
+### 11. Menambah detail transaksi kursi
+
+```
+DELIMITER $$
+
+CREATE PROCEDURE detil_trx(
+    IN kursi_id CHAR(4)
+)
+BEGIN
+    DECLARE id_dt CHAR(5);
+    DECLARE trx_id CHAR(19);
+
+    -- Ambil ID baru untuk detail transaksi
+    SET id_dt = get_next_dt_id();
+    SET trx_id = get_current_trx_id();
+    
+    INSERT INTO DETAIL_TRANSAKSI (
+        id_detail_transaksi,
+        transaksi_id_transaksi,
+        kursi_id_kursi
+    ) VALUES (
+        id_dt,
+        trx_id,
+        kursi_id
+    );
+END$$
+
+DELIMITER ;
+```
+
+### 12. Dummy transaksi
+
+```
+DELIMITER $$
+CREATE PROCEDURE dummy_transaksi()
+BEGIN
+    INSERT INTO TRANSAKSI (
+        id_transaksi,
+        total_biaya,
+        tanggal_transaksi,
+        pelanggan_id_pelanggan,
+        jadwal_tayang_id_tayang,
+        teater_id_teater
+    ) VALUES (
+        get_next_trx_id(),
+        -1.00,
+        NOW(),
+        'P0001',
+        'J001',
+        'T001'
+    );
+END$$
+DELIMITER ;
+```
+
+### 13. Menambah detail transaksi makanan
+
+```
+DELIMITER $$
+CREATE PROCEDURE makanan_trx(
+    IN id_makanan CHAR(4),
+    IN jumlah INT,
+    IN catatan VARCHAR(100)
+)
+BEGIN
+    INSERT INTO TRANSAKSI_MAKANAN (
+        transaksi_id_transaksi,
+        makanan_id_makanan,
+        tanggal,
+        jumlah,
+        catatan
+    ) VALUES (
+        get_current_trx_id(),
+        id_makanan,
+        NOW(),
+        jumlah,
+        catatan
+    );
+END$$
+DELIMITER ;
+```
+
+![WhatsApp Image 2025-06-17 at 11 58 40_43c58a63](https://github.com/user-attachments/assets/10420b2e-45ad-4dbc-ab9c-7ae6d9de7958)
+
+![WhatsApp Image 2025-06-17 at 11 59 43_75d3971f](https://github.com/user-attachments/assets/23d171a6-8bc7-4ef2-906d-048fa0f0e1c2)
+
+### 13. Menambah detail transaksi promo
+
+```
+DELIMITER $$
+CREATE PROCEDURE promo_trx(
+    IN id_promosi CHAR(10)
+)
+BEGIN
+    INSERT INTO PROMOSI_TRANSAKSI (
+        transaksi_id_transaksi,
+        promosi_id_promosi
+    ) VALUES (
+        get_current_trx_id(),
+        id_promosi
+    );
+END$$
+
+DELIMITER ;
+```
+
+![WhatsApp Image 2025-06-17 at 12 50 49_7ac1564e](https://github.com/user-attachments/assets/2a4d23e6-7b54-4db9-99b2-81fb5debcfb8)
+
+![WhatsApp Image 2025-06-17 at 12 51 26_c61efc3c](https://github.com/user-attachments/assets/b08667c1-3472-4775-96e2-ceeb27a17a82)
 
 
 
+### 14. Merge detail transaksi ke tabel transaksi
 
+```
+DELIMITER $$
+CREATE PROCEDURE add_trx(
+    IN pelanggan_id CHAR(5),
+    IN jadwal_id CHAR(4),
+    IN teater_id CHAR(4)
+)
+BEGIN
+    DECLARE total DECIMAL(10,2);
+    DECLARE waktu TIMESTAMP;
+
+    SET waktu = NOW();
+
+    -- Total akhir
+    SET total = calculate_transaction_total(get_current_trx_id());
+
+    -- Insert ke TRANSAKSI
+    UPDATE TRANSAKSI
+    SET
+        total_biaya = total,
+        tanggal_transaksi = waktu,
+        pelanggan_id_pelanggan = pelanggan_id,
+        jadwal_tayang_id_tayang = jadwal_id,
+        teater_id_teater = teater_id
+    WHERE id_transaksi = get_current_trx_id();
+END$$
+DELIMITER ;
+-- CALL add_trx("P0001", "J001", "T001");
+```
+
+![WhatsApp Image 2025-06-17 at 13 02 49_80494e15](https://github.com/user-attachments/assets/087040ce-d719-410a-916c-4c21f73e32ef)
+
+![WhatsApp Image 2025-06-17 at 13 03 20_427f6eff](https://github.com/user-attachments/assets/7b5d1916-139d-4a51-b9bb-b94af4541921)
 
 ## 🗂️ Index
 
