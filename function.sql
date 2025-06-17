@@ -221,18 +221,6 @@ END$$
 DELIMITER ;
 -- SELECT hitung_total(100000, 10000, 5000, 'TRX202506100001'); -- Example usage
 
--- #11. Hitung Harga Kursi [DONE]
--- Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
-DELIMITER $$
-CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
-RETURNS DECIMAL(10,2)
-DETERMINISTIC
-BEGIN
-    RETURN jumlah_kursi * harga_per_kursi;
-END$$
-DELIMITER ;
-
--- SELECT harga_kursi(3, 45000); -- Hasil: 135000
 -- #13. Calculate total for a transaction using only its ID
 DELIMITER $$
 CREATE FUNCTION calculate_transaction_total(transaksi_id CHAR(19))
