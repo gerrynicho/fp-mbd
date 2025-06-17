@@ -200,16 +200,39 @@ END;
 -- #7. Konversi Total Harga Menjadi Poin [DONE]
 -- Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
 DELIMITER //
-CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
+
+CREATE FUNCTION konversi_poin_dari_transaksi(p_id_transaksi CHAR(19))
 RETURNS INT
-DETERMINISTIC
+READS SQL DATA
 BEGIN
+    DECLARE total DECIMAL(10,2);
+    DECLARE id_pelanggan CHAR(5);
+    DECLARE punya_membership BOOL;
+
+    -- Ambil total biaya dan id pelanggan dari transaksi
+    SELECT total_biaya, pelanggan_id_pelanggan
+    INTO total, id_pelanggan
+    FROM TRANSAKSI
+    WHERE id_transaksi = p_id_transaksi;
+
+    -- Cek apakah pelanggan memiliki membership
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = id_pelanggan
+    ) INTO punya_membership;
+
+    -- Jika tidak punya membership, return 0 poin
+    IF NOT punya_membership THEN
+        RETURN 0;
+    END IF;
+
+    -- Hitung poin: setiap 25.000 = 1 poin
     RETURN FLOOR(total / 25000);
 END;
 //
+
 DELIMITER ;
 
--- SELECT harga_ke_poin(126000); -- Hasil: 5
+-- SELECT konversi_poin_dari_transaksi('TRX202506110001');
 
 -- #8, Hitung Pajak
 -- Menambahkan pajak (misal 10%) dari subtotal transaksi.
