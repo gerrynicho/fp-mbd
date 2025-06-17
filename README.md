@@ -502,6 +502,30 @@ SELECT harga_kursi(3, 45000); -- Hasil: 135000
 
 ---
 
+### 12. Hitung Pelanggan
+Menghitung jumlah pelanggan pada hari ini. 
+```sql
+-- HITUNG PELANGGAN HARI INI
+DELIMITER $$
+
+CREATE FUNCTION hitung_pelanggan_hari_ini(p_date DATE) 
+RETURNS INTEGER  
+DETERMINISTIC
+BEGIN 
+    DECLARE jumlah_pelanggan_hari_ini INT;
+
+    SELECT COUNT(DISTINCT pelanggan_id_pelanggan)
+    INTO jumlah_pelanggan_hari_ini
+    FROM TRANSAKSI t
+    WHERE DATE(t.tanggal_transaksi) = p_date;
+
+    RETURN jumlah_pelanggan_hari_ini;
+END $$
+
+DELIMITER ;
+```
+
+
 ## ⚡ Trigger
 
 ### 1. Promosi untuk 10 Orang Pertama per Hari
