@@ -430,6 +430,15 @@ END $$
 DELIMITER ;
 ```
 
+Testing 
+```
+select hitung_pelanggan_hari_ini(CURDATE()) AS jumlah_pelanggan_hari_ini
+```
+
+Hasil
+![WhatsApp Image 2025-06-17 at 12 08 37_a1f7c757](https://github.com/user-attachments/assets/4aebbe8a-5c0d-4d4a-a733-b6a14a6f75f1)
+
+
 
 ## ⚡ Trigger
 
@@ -545,7 +554,32 @@ Hasil <br>
 
 
 ### 3. Diskon Tambahan untuk Membership
+```sql
 Trigger otomatis menambahkan diskon tambahan jika pelanggan adalah member aktif.
+-- #3
+-- triger diskon tambahan ketika user ada membership [UPDATED]
+DELIMITER $$
+CREATE TRIGGER trg_diskon_membership
+BEFORE INSERT ON TRANSAKSI
+FOR EACH ROW
+BEGIN 
+    DECLARE diskon DECIMAL(10,2) DEFAULT 0;
+    DECLARE subtotal DECIMAL(10,2);
+    
+    -- If customer has membership, apply 10% discount
+    IF cek_membership(NEW.pelanggan_id_pelanggan) THEN
+        -- Get the original total_biaya
+        SET subtotal = NEW.total_biaya;
+        
+        -- Calculate discount (10%)
+        SET diskon = subtotal * 0.1;
+        
+        -- Apply the discount to total_biaya
+        SET NEW.total_biaya = NEW.total_biaya - diskon;
+    END IF;
+END $$
+DELIMITER ;
+```
 ![image](https://github.com/user-attachments/assets/0064f15e-1c3f-4395-b8c7-41a23dfd1d9a)
 ![image](https://github.com/user-attachments/assets/7dd36021-a559-4b13-9cfd-a8ed815f80cd)
 
@@ -942,11 +976,35 @@ CALL film_tersedia_tanggal_lokasi('2025-06-16', 'LS001');
 
 ### 10. Pembatalan Transaksi
 Menghapus transaksi dan rollback kursi, makanan, dan promosi yang digunakan.
+```sql
+DELIMITER $$
 
-### 11. Edit Transaksi (Pindah Kursi/Jadwal)
-Mengubah detail transaksi, seperti kursi atau jadwal film, dengan validasi ketersediaan baru.
+CREATE PROCEDURE pembatalan_transaksi(IN p_id_transaksi CHAR(19))
+BEGIN
+    -- Set kursi back to available
+    UPDATE KURSI
+    SET sedia = TRUE
+    WHERE id_kursi IN (
+        SELECT kursi_id_kursi
+        FROM DETAIL_TRANSAKSI
+        WHERE transaksi_id_transaksi = p_id_transaksi
+    );
 
----
+    -- Restore makanan stock
+    UPDATE MAKANAN m
+    JOIN TRANSAKSI_MAKANAN tm ON tm.makanan_id_makanan = m.id_makanan
+    SET m.stok = m.stok + tm.jumlah
+    WHERE tm.transaksi_id_transaksi = p_id_transaksi;
+
+    -- Delete associated data
+    DELETE FROM PROMOSI_TRANSAKSI WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM TRANSAKSI_MAKANAN WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM DETAIL_TRANSAKSI WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM TRANSAKSI WHERE id_transaksi = p_id_transaksi;
+END $$
+
+DELIMITER ;
+```
 
 ## 🗂️ Index
 
