@@ -150,7 +150,6 @@ DELIMITER ;
 -- END;
 -- $$
 -- DELIMITER ;
-=======
 DELIMITER //
 
 CREATE FUNCTION cek_poin_gratis_tiket(p_id CHAR(5))
@@ -175,8 +174,6 @@ BEGIN
     END IF;
 END;
 //
->>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
-
 
 -- SELECT cek_poin_gratis_tiket('P0001') AS status_tiket_gratis;
 
