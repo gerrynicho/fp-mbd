@@ -135,6 +135,7 @@ DELIMITER ;
 
 -- #6.  Cek Poin untuk Free Tiket [FAILED]
 -- Mengecek jika poin pelanggan >= 100, maka tiket gratis akan diterapkan.
+<<<<<<< HEAD
 -- DELIMITER $$
 -- CREATE FUNCTION jumlah_tiket_gratis(p_id CHAR(5))
 -- RETURNS INT
@@ -149,23 +150,85 @@ DELIMITER ;
 -- END;
 -- $$
 -- DELIMITER ;
+=======
+DELIMITER //
+
+CREATE FUNCTION cek_poin_gratis_tiket(p_id CHAR(5))
+RETURNS BOOLEAN
+BEGIN
+    DECLARE jumlah_poin INT;
+
+    SELECT poin INTO jumlah_poin
+    FROM MEMBERSHIP
+    WHERE pelanggan_id_pelanggan = p_id;
+
+    -- Jika pelanggan tidak memiliki membership, tidak bisa tiket gratis
+    IF jumlah_poin IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Jika poin >= 100, tiket gratis
+    IF jumlah_poin >= 100 THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+//
+>>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 
 
--- SELECT dapat_tiket_gratis('P0001'); ---OUTPUTNYA HARUSNYA 1
--- SELECT dapat_tiket_gratis('P0002');
+-- SELECT cek_poin_gratis_tiket('P0001') AS status_tiket_gratis;
+
 
 
 -- #7. Konversi Total Harga Menjadi Poin [DONE]
 -- Mengubah total harga transaksi menjadi poin, misalnya setiap Rp25.000 = 1 poin.
+<<<<<<< HEAD
 DELIMITER $$
 CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
+=======
+DELIMITER //
+
+CREATE FUNCTION konversi_poin_dari_transaksi(p_id_transaksi CHAR(19))
+>>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 RETURNS INT
-DETERMINISTIC
+READS SQL DATA
 BEGIN
+    DECLARE total DECIMAL(10,2);
+    DECLARE id_pelanggan CHAR(5);
+    DECLARE punya_membership BOOL;
+
+    -- Ambil total biaya dan id pelanggan dari transaksi
+    SELECT total_biaya, pelanggan_id_pelanggan
+    INTO total, id_pelanggan
+    FROM TRANSAKSI
+    WHERE id_transaksi = p_id_transaksi;
+
+    -- Cek apakah pelanggan memiliki membership
+    SELECT EXISTS (
+        SELECT 1 FROM MEMBERSHIP WHERE pelanggan_id_pelanggan = id_pelanggan
+    ) INTO punya_membership;
+
+    -- Jika tidak punya membership, return 0 poin
+    IF NOT punya_membership THEN
+        RETURN 0;
+    END IF;
+
+    -- Hitung poin: setiap 25.000 = 1 poin
     RETURN FLOOR(total / 25000);
+<<<<<<< HEAD
 END$$
 DELIMITER ;
 -- SELECT harga_ke_poin(126000); -- Hasil: 5
+=======
+END;
+//
+
+DELIMITER ;
+
+-- SELECT konversi_poin_dari_transaksi('TRX202506110001');
+>>>>>>> 36c18c79bf1bd2adc09df6b71299467f24bb8a83
 
 -- #8, Hitung Pajak
 -- Menambahkan pajak (misal 10%) dari subtotal transaksi.
