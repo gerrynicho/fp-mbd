@@ -1,3 +1,7 @@
+---
+Author: Gerry Nicholas - 5025231017, Nicholas - 5025231031, Imelda Alexis Jovita, 5025231032, Karla Vania Widjanarko - 5025231123
+Kelompok: F04
+---
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
@@ -15,13 +19,12 @@
     - [3. Hitung Total Penggunaan Promosi](#3-hitung-total-penggunaan-promosi)
     - [4. Kalkulasi Harga Setelah Promo](#4-kalkulasi-harga-setelah-promo)
     - [5. Kalkulasi Harga Makanan dalam Keranjang](#5-kalkulasi-harga-makanan-dalam-keranjang)
-    - [6. Kembalikan Stok Makanan](#6-kembalikan-stok-makanan)
-    - [7. Cek Poin untuk Free Tiket](#7-cek-poin-untuk-free-tiket)
-    - [8. Konversi Total Harga Menjadi Poin](#8-konversi-total-harga-menjadi-poin)
-    - [9. Hitung Pajak](#9-hitung-pajak)
-    - [10. Hitung Refund Pembatalan](#10-hitung-refund-pembatalan)
-    - [11. Hitung Total Transaksi](#11-hitung-total-transaksi)
-    - [12. Hitung Harga Kursi](#12-hitung-harga-kursi)
+    - [6. Cek Poin untuk Free Tiket](#6-cek-poin-untuk-free-tiket)
+    - [7. Konversi Total Harga Menjadi Poin](#7-konversi-total-harga-menjadi-poin)
+    - [8. Hitung Pajak](#8-hitung-pajak)
+    - [9. Hitung Refund Pembatalan](#9-hitung-refund-pembatalan)
+    - [10. Hitung Total Transaksi](#10-hitung-total-transaksi)
+    - [11. Hitung Harga Kursi](#11-hitung-harga-kursi)
   - [⚡ Trigger](#-trigger)
     - [1. Promosi untuk 10 Orang Pertama per Hari](#1-promosi-untuk-10-orang-pertama-per-hari)
     - [2. Trigger Stok Menipis](#2-trigger-stok-menipis)
@@ -37,7 +40,7 @@
     - [5. Studio Menjual Makanan Apa Saja](#5-studio-menjual-makanan-apa-saja)
     - [6. Studio Menayangkan Film Apa Saja](#6-studio-menayangkan-film-apa-saja)
     - [7. Teater Tempat Film Ditayangkan](#7-teater-tempat-film-ditayangkan)
-    - [8. Jadwal Tayang di Teater Tertentu](#8-jadwal-tayang-di-teater-tertentu)
+    - [8. Jadwal Tayang di Lokasi Tertentu](#8-jadwal-tayang-di-lokasi-tertentu)
     - [9. Film Tersedia Berdasarkan Tanggal dan Lokasi](#9-film-tersedia-berdasarkan-tanggal-dan-lokasi)
     - [10. Pembatalan Transaksi](#10-pembatalan-transaksi)
     - [11. Edit Transaksi (Pindah Kursi/Jadwal)](#11-edit-transaksi-pindah-kursijadwal)
@@ -154,8 +157,7 @@ Mengembalikan apakah pelanggan memiliki status membership berdasarkan ID pelangg
 
 ```sql
 --
-DELIMITER //
-
+DELIMITER $$
 CREATE FUNCTION cek_membership(p_id CHAR(5))
 RETURNS BOOLEAN
 READS SQL DATA
@@ -169,9 +171,7 @@ BEGIN
     ) INTO status;
 
     RETURN status;
-END;
-//
-
+END//
 DELIMITER ;
 ```
 ```sql
@@ -186,8 +186,7 @@ SELECT cek_membership('P0025') AS status_membership;
 Mengecek apakah tanggal saat ini masih dalam rentang masa berlaku promosi.
 
 ```sql
-DELIMITER //
-
+DELIMITER $$
 CREATE FUNCTION promosi_masih_berlaku(p_id CHAR(10))
 RETURNS BOOLEAN
 READS SQL DATA
@@ -204,9 +203,7 @@ BEGIN
         id_promosi = p_id;
 
     RETURN IFNULL(status, FALSE);
-END;
-//
-
+END//
 DELIMITER ;
 ```
 ```sql
@@ -223,7 +220,7 @@ SELECT promosi_masih_berlaku('PR014') AS masih_berlaku;
 Mengembalikan total jumlah penggunaan promosi tertentu oleh semua pelanggan.
 
 ```sql
-DELIMITER //
+DELIMITER $$
 
 CREATE FUNCTION total_penggunaan_promosi(p_id CHAR(10))
 RETURNS INT
@@ -236,11 +233,8 @@ BEGIN
     WHERE promosi_id_promosi = p_id;
 
     RETURN total;
-END;
-//
-
+END//
 DELIMITER ;
-
 ```
 
 
@@ -269,7 +263,7 @@ SELECT total_penggunaan_promosi('PR011') AS jumlah_penggunaan;
 Mengurangi harga awal dengan persentase atau nilai diskon dari promosi yang valid.
 
 ```sql
-DELIMITER //
+DELIMITER $$
 
 CREATE FUNCTION harga_setelah_promo(p_id CHAR(10), harga_awal DECIMAL(10, 2))
 RETURNS DECIMAL(10,2)
@@ -300,9 +294,7 @@ BEGIN
     SET harga_akhir = harga_awal - (harga_awal * (diskon_persen / 100));
 
     RETURN harga_akhir;
-END;
-//
-
+END//
 DELIMITER ;
 
 ```
@@ -325,7 +317,7 @@ Menghitung total harga makanan berdasarkan kuantitas dan harga satuan masing-mas
 
 ```sql
 
-DELIMITER //
+DELIMITER $$
 CREATE FUNCTION total_harga_keranjang(p_transaksi CHAR(19))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
@@ -337,8 +329,7 @@ BEGIN
     JOIN MAKANAN m ON tm.makanan_id_makanan = m.id_makanan
     WHERE tm.transaksi_id_transaksi = p_transaksi;
     RETURN IFNULL(total, 0);
-END;
-//
+END//
 DELIMITER ;
 ```
 ```sql
@@ -363,6 +354,7 @@ BEGIN
     SELECT poin INTO jumlah_poin
     FROM MEMBERSHIP
     WHERE pelanggan_id_pelanggan = p_id;
+
 
     -- Jika pelanggan tidak memiliki membership, tidak bisa tiket gratis
     IF jumlah_poin IS NULL THEN
@@ -394,8 +386,7 @@ Mengubah total harga transaksi menjadi poin, setiap Rp25.000 = 1 poin.
 
 ```sql
 DELIMITER //
-
-CREATE FUNCTION konversi_poin_dari_transaksi(p_id_transaksi CHAR(19))
+CREATE FUNCTION harga_ke_poin(total DECIMAL(10,2))
 RETURNS INT
 READS SQL DATA
 BEGIN
@@ -423,7 +414,6 @@ BEGIN
     RETURN FLOOR(total / 25000);
 END;
 //
-
 DELIMITER ;
 
 ```
@@ -439,14 +429,13 @@ SELECT konversi_poin_dari_transaksi('TRX202506110001');
 Menambahkan pajak (misal 10%) dari subtotal transaksi.
 
 ```sql
-DELIMITER //
+DELIMITER $$
 CREATE FUNCTION hitung_pajak(subtotal DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
     RETURN subtotal * 0.10;
-END;
-//
+END//
 DELIMITER ;
 ```
 ```sql
@@ -458,14 +447,13 @@ SELECT hitung_pajak(100000); -- Hasil: 10000
 Menghitung nominal refund sesuai kebijakan (misal potongan 20% dari total).
 
 ```sql
-DELIMITER //
+DELIMITER $$
 CREATE FUNCTION hitung_refund(total DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
     RETURN total * 0.80; -- Potongan 20%
-END;
-//
+END//
 DELIMITER ;
 ```
 ```sql
@@ -478,14 +466,13 @@ SELECT hitung_refund(100000); -- Hasil: 80000
 Menjumlahkan subtotal, pajak, biaya admin, dan dikurangi diskon jika ada.
 
 ```sql
-DELIMITER //
+DELIMITER $$
 CREATE FUNCTION hitung_total(subtotal DECIMAL(10,2), pajak DECIMAL(10,2), biaya_admin DECIMAL(10,2), diskon DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
     RETURN subtotal + pajak + biaya_admin - diskon;
-END;
-//
+END//
 DELIMITER ;
 ```
 ```sql
@@ -498,14 +485,13 @@ SELECT hitung_total(100000, 10000, 5000, 15000); -- Hasil: 100000
 Mengembalikan harga berdasarkan banyaknya kursi yang dipesan.
 
 ```sql
-DELIMITER //
+DELIMITER $$
 CREATE FUNCTION harga_kursi(jumlah_kursi INT, harga_per_kursi DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
     RETURN jumlah_kursi * harga_per_kursi;
-END;
-//
+END//
 DELIMITER ;
 ```
 ```sql

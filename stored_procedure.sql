@@ -1,6 +1,6 @@
 -- #6 Kembalikan Stok Makanan [HARUSNYA FUNCTION TAPI KU COBA JADI PROCEDURE]
 
-DELIMITER //
+DELIMITER $$
 CREATE PROCEDURE kembalikan_stok_makanan(p_transaksi CHAR(19))
 BEGIN
     DECLARE done INT DEFAULT 0;
@@ -24,8 +24,7 @@ BEGIN
         WHERE id_makanan = makanan_id;
     END LOOP;
     CLOSE cur;
-END;
-//
+END$$
 DELIMITER ;
 
 -- CALL kembalikan_stok_makanan('TRX202506100001');
@@ -36,10 +35,10 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE top_makanan_terlaris_per_kategori()
 BEGIN
-    SELECT m.kategori, m.nama_makanan, SUM(tm.jumlah) AS total_terjual
+    SELECT m.klasifikasi, m.nama, SUM(tm.jumlah) AS total_terjual
     FROM MAKANAN m
     JOIN TRANSAKSI_MAKANAN tm ON m.id_makanan = tm.makanan_id_makanan
-    GROUP BY m.kategori, m.nama_makanan
+    GROUP BY m.klasifikasi, m.nama
     ORDER BY total_terjual DESC
     LIMIT 3;
 END $$
@@ -49,12 +48,12 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE film_paling_banyak_ditonton()
 BEGIN
-    SELECT f.id_film, f.judul, COUNT(jt.id_jadwal) AS jumlah_penonton
+    SELECT f.id_film, f.judul_film, COUNT(jt.id_tayang) AS jumlah_penonton
     FROM FILM f
     JOIN JADWAL_TAYANG jt ON f.id_film = jt.film_id_film
-    JOIN KURSI k ON jt.studio_id_studio = k.studio_id_studio
+    JOIN KURSI k ON jt.teater_id_teater = k.teater_id_teater
     WHERE k.sedia = FALSE -- Kursi yang sudah dipesan
-    GROUP BY f.id_film, f.judul
+    GROUP BY f.id_film, f.judul_film
     ORDER BY jumlah_penonton DESC
 END $$
 
@@ -71,6 +70,37 @@ END $$
 DELIMITER ;
 
 -- #4 add transaksi
+CREATE PROCEDURE create_transaksi(
+    IN p_biaya DECIMAL(10, 2),
+    IN p_pelanggan_id CHAR(5),
+    IN p_jadwal_tayang_id CHAR(7),
+    IN p_teater_id CHAR(5),
+    IN promosi_id CHAR(10) DEFAULT NULL,
+)
+BEGIN
+    DECLARE new_transaksi_id CHAR(19);
+    DECLARE total DECIMAL(10, 2);
+
+    SET new_transaksi_id = get_next_trx_id();
+    SET total = calculate_transaction_total(
+        p_biaya,
+        2000.00,
+        0, -- diskon, bisa diubah sesuai kebutuhan
+        new_transaksi_id
+    );
+
+    INSERT INTO TRANSAKSI (
+        id_transaksi,
+        total_biaya,
+        tanggal_transaksi,
+        pelanggan_id_pelanggan,
+        jadwal_tayang_id_tayang,
+        teater_id_teater
+    ) VALUES (
+        new_transaksi_id,
+
+END $$
+DELIMITER ;
 
 -- #5 lokasi studio menjual makanan apa saja
 DELIMITER $$
