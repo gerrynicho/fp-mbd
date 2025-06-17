@@ -209,5 +209,33 @@ END$$
 DELIMITER ;
 
 -- #10 pembatalan transaksi
+DELIMITER $$
+
+CREATE PROCEDURE pembatalan_transaksi(IN p_id_transaksi CHAR(19))
+BEGIN
+    -- Set kursi back to available
+    UPDATE KURSI
+    SET sedia = TRUE
+    WHERE id_kursi IN (
+        SELECT kursi_id_kursi
+        FROM DETAIL_TRANSAKSI
+        WHERE transaksi_id_transaksi = p_id_transaksi
+    );
+
+    -- Restore makanan stock
+    UPDATE MAKANAN m
+    JOIN TRANSAKSI_MAKANAN tm ON tm.makanan_id_makanan = m.id_makanan
+    SET m.stok = m.stok + tm.jumlah
+    WHERE tm.transaksi_id_transaksi = p_id_transaksi;
+
+    -- Delete associated data
+    DELETE FROM PROMOSI_TRANSAKSI WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM TRANSAKSI_MAKANAN WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM DETAIL_TRANSAKSI WHERE transaksi_id_transaksi = p_id_transaksi;
+    DELETE FROM TRANSAKSI WHERE id_transaksi = p_id_transaksi;
+END $$
+
+DELIMITER ;
+
 
 -- #11 edit transaksi (pindah kursi atau jadwal)
