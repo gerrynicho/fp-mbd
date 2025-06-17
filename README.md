@@ -1,4 +1,3 @@
----
 
 ### Kelompok F04
 
@@ -9,7 +8,6 @@
 | 3  | Imelda Alexis Jovita     | 5025231032  |
 | 4  | Karla Vania Widjanarko   | 5025231123  |
 
----
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [🎬 Bioskop Database Design – Fitur \& Indexing](#-bioskop-database-design--fitur--indexing)
