@@ -133,7 +133,7 @@ CREATE TABLE KURSI_JADWAL_TAYANG(
     FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang)
 );
 
-CREATE TABLE log_notifikasi (
+CREATE TABLE LOG_NOTIFIKASI (
     id_notif INT AUTO_INCREMENT PRIMARY KEY,
     id_makanan VARCHAR(20),
     tipe_notif ENUM('ERROR', 'NOTICE'),
@@ -141,7 +141,7 @@ CREATE TABLE log_notifikasi (
     waktu DATETIME
 );
 
-CREATE TABLE film_lokasi_studio (
+CREATE TABLE FILM_LOKASI_STUDIO (
    film_id_film CHAR(5) NOT NULL,
    lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
    CONSTRAINT film_lokasi_studio_pk PRIMARY KEY (film_id_film, lokasi_studio_id_lokasi_studio),
