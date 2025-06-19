@@ -70,6 +70,7 @@ CREATE TABLE JADWAL_TAYANG (
 CREATE TABLE TRANSAKSI (
     id_transaksi CHAR(19) PRIMARY KEY,
     total_biaya DECIMAL(10, 2) NOT NULL,
+    status ENUM('ACCEPTED', 'DRAFT') NOT NULL DEFAULT 'DRAFT',
     tanggal_transaksi DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     pelanggan_id_pelanggan CHAR(5) NOT NULL,
     jadwal_tayang_id_tayang CHAR(7) NOT NULL,
@@ -138,4 +139,12 @@ CREATE TABLE log_notifikasi (
     tipe_notif ENUM('ERROR', 'NOTICE'),
     pesan TEXT,
     waktu DATETIME
+);
+
+CREATE TABLE film_lokasi_studio (
+   film_id_film CHAR(5) NOT NULL,
+   lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
+   CONSTRAINT film_lokasi_studio_pk PRIMARY KEY (film_id_film, lokasi_studio_id_lokasi_studio),
+   FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
+   FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
 );
