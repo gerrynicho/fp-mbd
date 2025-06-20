@@ -29,6 +29,7 @@ CREATE PROCEDURE get_film_by_merk_studio(IN merk_input VARCHAR(30))
 BEGIN
     SELECT DISTINCT 
         F.id_film,
+        F.file_gambar,
         F.judul_film,
         F.genre,
         F.durasi,
@@ -99,6 +100,7 @@ CREATE PROCEDURE film_tersedia_tanggal_lokasi(
 BEGIN
     SELECT DISTINCT
         f.id_film,
+        f.file_gambar,
         f.judul_film,
         f.genre,
         f.durasi,
