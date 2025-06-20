@@ -32,7 +32,7 @@ CREATE TABLE LOKASI_STUDIO (
 
 CREATE TABLE FILM (
     id_film CHAR(5) PRIMARY KEY,
-    path_image TEXT NOT NULL,
+    file_gambar TEXT NOT NULL,
     judul_film VARCHAR(50) NOT NULL,
     genre VARCHAR(20) NOT NULL,
     durasi INT NOT NULL,
