@@ -102,6 +102,14 @@ BEGIN
     UPDATE KURSI
     SET sedia = FALSE
     WHERE id_kursi = NEW.kursi_id_kursi;
+
+    UPDATE TEATER 
+    SET jumlah_kursi_tersedia = jumlah_kursi_tersedia - 1
+    WHERE id_teater = (
+        SELECT teater_id_teater
+        FROM KURSI 
+        WHERE id_kursi = NEW.kursi_id_kursi
+    );
 END $$
 DELIMITER ;
 
@@ -119,5 +127,35 @@ BEGIN
         INNER JOIN TRANSAKSI t ON dt.transaksi_id_transaksi = t.id_transaksi
         SET k.sedia = TRUE
         WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
+
+        UPDATE TEATER 
+        SET jumlah_kursi_tersedia = (
+            SELECT COUNT(*) 
+            FROM KURSI k
+            WHERE k.sedia = TRUE AND teater_id_teater = (
+                SELECT teater_id_teater 
+                FROM JADWAL_TAYANG 
+                WHERE id_tayang = NEW.id_tayang
+            )
+        );
+        WHERE id_teater = (
+            SELECT teater_id_teater 
+            FROM JADWAL_TAYANG 
+            WHERE id_tayang = NEW.id_tayang
+        );
     END IF;
 END $$
+
+-- [DRAFT input handling]
+-- # 7 
+-- Jika jumlah kursi tersedia 0 cegah pembeli
+-- # 8 
+-- Jika promosi yang dimasukkan pengguna ketemu tapi masa sudah tidak aktif
+-- # 9
+-- Jika diskon dibuat angka minus
+-- # 10 
+-- Jika tanggal mulai input diskon lebih besar daripada tanggal berakhir 
+-- # 11 
+-- Jika harga kursi 0 atau minus 
+-- # 12
+-- Jika transaksi total biaya minus maka set default 0
