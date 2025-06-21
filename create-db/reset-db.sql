@@ -60,14 +60,14 @@ CREATE TABLE MEMBERSHIP (
     tanggal_lahir DATE NOT NULL,
     poin INT NOT NULL,
     pelanggan_id_pelanggan CHAR(5) NOT NULL,
-    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan)
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE TEATER(
     id_teater CHAR(5) PRIMARY KEY,
     jumlah_kursi_tersedia INT NOT NULL,
     lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
-    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE JADWAL_TAYANG (
@@ -75,8 +75,8 @@ CREATE TABLE JADWAL_TAYANG (
     jadwal DATETIME NOT NULL,
     film_id_film CHAR(5) NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
-    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE TRANSAKSI (
@@ -87,17 +87,17 @@ CREATE TABLE TRANSAKSI (
     pelanggan_id_pelanggan CHAR(5) NOT NULL,
     jadwal_tayang_id_tayang CHAR(7) NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan),
-    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang),
-    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+    FOREIGN KEY (pelanggan_id_pelanggan) REFERENCES PELANGGAN(id_pelanggan) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE MAKANAN_LOKASI_STUDIO (
     makanan_id_makanan CHAR(5) NOT NULL,
     lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
     PRIMARY KEY (makanan_id_makanan, lokasi_studio_id_lokasi_studio),
-    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan),    
-    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan) ON DELETE CASCADE ON UPDATE CASCADE,    
+    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE TRANSAKSI_MAKANAN (
@@ -107,16 +107,16 @@ CREATE TABLE TRANSAKSI_MAKANAN (
     jumlah INT NOT NULL,
     catatan VARCHAR(100),
     PRIMARY KEY (transaksi_id_transaksi, makanan_id_makanan),
-    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
-    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan)
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (makanan_id_makanan) REFERENCES MAKANAN(id_makanan) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE PROMOSI_TRANSAKSI(
     transaksi_id_transaksi CHAR(19) NOT NULL,
     promosi_id_promosi CHAR(10) NOT NULL,
     PRIMARY KEY (transaksi_id_transaksi, promosi_id_promosi),
-    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
-    FOREIGN KEY (promosi_id_promosi) REFERENCES PROMOSI(id_promosi)
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (promosi_id_promosi) REFERENCES PROMOSI(id_promosi) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE KURSI(
@@ -126,23 +126,23 @@ CREATE TABLE KURSI(
     harga_kursi DECIMAL(10, 2) NOT NULL,
     sedia BOOLEAN NOT NULL,
     teater_id_teater CHAR(5) NOT NULL,
-    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater)
+    FOREIGN KEY (teater_id_teater) REFERENCES TEATER(id_teater) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE DETAIL_TRANSAKSI (
     id_detail_transaksi CHAR(10) PRIMARY KEY,
     transaksi_id_transaksi CHAR(19) NOT NULL,
     kursi_id_kursi CHAR(5) NOT NULL,
-    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi),
-    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi)
+    FOREIGN KEY (transaksi_id_transaksi) REFERENCES TRANSAKSI(id_transaksi) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE KURSI_JADWAL_TAYANG(
     kursi_id_kursi CHAR(5) NOT NULL,
     jadwal_tayang_id_tayang CHAR(7) NOT NULL,
     PRIMARY KEY (kursi_id_kursi, jadwal_tayang_id_tayang),
-    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi),
-    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang)
+    FOREIGN KEY (kursi_id_kursi) REFERENCES KURSI(id_kursi) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (jadwal_tayang_id_tayang) REFERENCES JADWAL_TAYANG(id_tayang) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE LOG_NOTIFIKASI (
@@ -157,8 +157,8 @@ CREATE TABLE FILM_LOKASI_STUDIO (
    film_id_film CHAR(5) NOT NULL,
    lokasi_studio_id_lokasi_studio CHAR(5) NOT NULL,
    CONSTRAINT film_lokasi_studio_pk PRIMARY KEY (film_id_film, lokasi_studio_id_lokasi_studio),
-   FOREIGN KEY (film_id_film) REFERENCES FILM(id_film),
-   FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio)
+   FOREIGN KEY (film_id_film) REFERENCES FILM(id_film) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- generate data
