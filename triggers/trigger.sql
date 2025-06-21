@@ -147,15 +147,32 @@ BEGIN
 END $$
 
 -- [DRAFT input handling]
--- # 7 
--- Jika jumlah kursi tersedia 0 cegah pembeli
--- # 8 
+-- # 7
 -- Jika promosi yang dimasukkan pengguna ketemu tapi masa sudah tidak aktif
--- # 9
+DELIMITER $$
+CREATE TRIGGER trg_cek_promosi_tidak_aktif
+BEFORE INSERT ON PROMOSI_TRANSAKSI 
+FOR EACH ROW 
+BEGIN 
+    DECLARE promo_aktif INT;
+
+    SELECT COUNT(*) INTO promo_aktif
+    FROM PROMOSI
+    WHERE id_promosi = NEW.promosi_id_promosi
+        AND CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir;
+    
+    IF promo_aktif = 0 THEN
+        INSERT INTO LOG_NOTIFIKASI(tipe_notif, pesan, waktu)
+        VALUES ('NOTICE', CONCAT('Promosi ', NEW.promosi_id_promosi, ' tidak aktif'), NOW())
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Promosi sudah tidak aktif.';
+    END IF;
+END$$
+DELIMITER;
+-- # 8
 -- Jika diskon dibuat angka minus
--- # 10 
+-- # 9 
 -- Jika tanggal mulai input diskon lebih besar daripada tanggal berakhir 
--- # 11 
+-- # 10 
 -- Jika harga kursi 0 atau minus 
--- # 12
+-- # 11
 -- Jika transaksi total biaya minus maka set default 0
