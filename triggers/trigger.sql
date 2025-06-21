@@ -7,10 +7,24 @@ BEFORE INSERT ON PROMOSI_TRANSAKSI
 FOR EACH ROW
 BEGIN 
     DECLARE count INTEGER DEFAULT 0;
+    DECLARE promo_aktif INT;
 
+    -- trg diskon 10 orang
     SET count = hitung_pelanggan_hari_ini(CURDATE());
     IF count <= 10 THEN
         SET NEW.promosi_id_promosi = 'PR010';
+    END IF;
+
+    -- trg diskon cek promo aktif
+    SELECT COUNT(*) INTO promo_aktif
+    FROM PROMOSI p
+    WHERE id_promosi = NEW.promosi_id_promosi
+        AND CURDATE() BETWEEN p.tanggal_mulai AND p.tanggal_berakhir;
+    
+    IF promo_aktif = 0 THEN
+        INSERT INTO LOG_NOTIFIKASI(tipe_notif, pesan, waktu)
+        VALUES ('ERROR', CONCAT('Promosi ', NEW.promosi_id_promosi, ' tidak aktif'), NOW());
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Promosi sudah tidak aktif.';
     END IF;
 END $$
 
@@ -27,22 +41,22 @@ FOR EACH ROW
 BEGIN 
     -- Error: stok tidak boleh negatif
     IF NEW.stok < 0 THEN 
-        INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id_makanan, 'ERROR', 'Stok tidak mencukupi', NOW());
+        INSERT INTO log_notifikasi (tipe_notif, pesan, waktu)
+        VALUES ('ERROR',  CONCAT('Stok ', NEW.id_makanan, ' tidak mencukupi'), NOW());
 
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Error: Stok tidak mencukupi';
 
     -- Warning: stok kosong (update tetap dilakukan)
     ELSEIF NEW.stok = 0 THEN 
-        INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id_makanan, 'NOTICE', 'Stok kosong', NOW());
+        INSERT INTO log_notifikasi (tipe_notif, pesan, waktu)
+        VALUES ('NOTICE', CONCAT('Stok ', NEW.id_makanan, ' kosong'), NOW());
         -- No SIGNAL so update continues
 
     -- Notice: stok rendah (<= 5), update tetap dilakukan
     ELSEIF NEW.stok <= 5 THEN 
         INSERT INTO log_notifikasi (id_makanan, tipe_notif, pesan, waktu)
-        VALUES (NEW.id_makanan, 'NOTICE', 'Stok rendah, tolong stok ulang', NOW());
+        VALUES ('NOTICE', CONCAT('Stok ', NEW.id_makanan, ' kritis! Tolong Restock.'), NOW());
         -- No SIGNAL so update continues
     END IF;
 END$$
@@ -70,6 +84,15 @@ BEGIN
         -- Apply the discount to total_biaya
         SET NEW.total_biaya = NEW.total_biaya - diskon;
     END IF;
+
+    -- Jika ada total biaya negatif, otomatis set as 0
+    IF NEW.total_biaya < 0 THEN
+        SET total_biaya = 0;
+        INSERT INTO LOG_NOTIFIKASI (tipe_notif, pesan, waktu)
+        VALUES ('NOTICE', 'Total biaya transaksi negatif, diset menjadi 0.', NOW());
+    END IF;
+
+
 END $$
 DELIMITER ;
 
@@ -103,6 +126,7 @@ BEGIN
     SET sedia = FALSE
     WHERE id_kursi = NEW.kursi_id_kursi;
 
+    -- Update jumlah kursi teater available kalo udah dibeli
     UPDATE TEATER 
     SET jumlah_kursi_tersedia = jumlah_kursi_tersedia - 1
     WHERE id_teater = (
@@ -128,6 +152,7 @@ BEGIN
         SET k.sedia = TRUE
         WHERE t.jadwal_tayang_id_tayang = NEW.id_tayang;
 
+    -- Update jumlah kursi teater available kalo sudah dibebaskan
         UPDATE TEATER 
         SET jumlah_kursi_tersedia = (
             SELECT COUNT(*) 
@@ -146,33 +171,45 @@ BEGIN
     END IF;
 END $$
 
--- [DRAFT input handling]
--- # 7
--- Jika promosi yang dimasukkan pengguna ketemu tapi masa sudah tidak aktif
-DELIMITER $$
-CREATE TRIGGER trg_cek_promosi_tidak_aktif
-BEFORE INSERT ON PROMOSI_TRANSAKSI 
-FOR EACH ROW 
-BEGIN 
-    DECLARE promo_aktif INT;
-
-    SELECT COUNT(*) INTO promo_aktif
-    FROM PROMOSI
-    WHERE id_promosi = NEW.promosi_id_promosi
-        AND CURDATE() BETWEEN tanggal_mulai AND tanggal_berakhir;
-    
-    IF promo_aktif = 0 THEN
-        INSERT INTO LOG_NOTIFIKASI(tipe_notif, pesan, waktu)
-        VALUES ('NOTICE', CONCAT('Promosi ', NEW.promosi_id_promosi, ' tidak aktif'), NOW())
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Promosi sudah tidak aktif.';
-    END IF;
-END$$
-DELIMITER;
 -- # 8
 -- Jika diskon dibuat angka minus
+DELIMITER $$
+CREATE TRIGGER trg_diskon_minus
+BEFORE INSERT ON PROMOSI
+BEGIN
+    IF NEW.diskon < 0 THEN
+        INSERT INTO LOG_NOTIFIKASI (tipe_notif, pesan, waktu)
+        VALUES('ERROR', 'Diskon tidak boleh negatif', NOW());
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Diskon tidak boleh negatif.';
+    END IF;
+END $$
+DELIMITER ;
+
+
 -- # 9 
 -- Jika tanggal mulai input diskon lebih besar daripada tanggal berakhir 
+DELIMITER $$
+CREATE TRIGGER trg_tanggal_promosi_invalid 
+BEFORE INSERT ON PROMOSI 
+FOR EACH ROW 
+BEGIN
+    IF NEW.tanggal_mulai > NEW.tanggal_berakhir THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tanggal promosi invalid. Tanggal akhir lebih dahulu daripada tanggal mulai';
+    END IF;
+END$$;
+DELIMITER ;
+
 -- # 10 
 -- Jika harga kursi 0 atau minus 
--- # 11
--- Jika transaksi total biaya minus maka set default 0
+DELIMITER $$ 
+CREATE TRIGGER trg_harga_kursi_invalid 
+BEFORE INSERT ON KURSI 
+FOR EACH ROW 
+BEGIN
+    IF New.harga_kursi <= 0 THEN 
+        SET NEW.harga_kursi = 25000; -- harga default kursi paling murah yang normal, tapi kalau menetapkan 10000 juga boleh
+        INSERT INTO LOG_NOTIFIKASI (tipe_notif, pesan, waktu)
+        VALUES ('NOTICE', CONCAT('Harga kursi ', NEW.id_kursi , ' invalid, diset default 25000 (harga normal).'), NOW())
+    END IF;
+END$$
+DELIMITER ;
