@@ -11,7 +11,7 @@ CREATE TABLE PROMOSI (
     diskon DECIMAL(5, 2) NOT NULL,
     tanggal_mulai DATE NOT NULL,
     tanggal_berakhir DATE NOT NULL,
-    minimum_pembelian INT NOT NULL
+    minimum_pembelian INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE MAKANAN (
