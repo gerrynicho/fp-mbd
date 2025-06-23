@@ -21,7 +21,6 @@ BEGIN
         SET p_user_id = NULL;
     END;
     
-    -- Validation FIRST - check if phone number already exists
     SELECT COUNT(*) INTO user_exists 
     FROM PELANGGAN 
     WHERE no_telepon = p_no_telepon;
@@ -31,16 +30,12 @@ BEGIN
         SET p_message = 'Phone number already registered';
         SET p_user_id = NULL;
     ELSE
-        -- Start transaction for actual data modification
         START TRANSACTION;
         
-        -- Generate new ID
         SET new_pelanggan_id = get_next_pelanggan_id();
         
-        -- Hash password
         SET hashed_pass = hash_password(p_password);
         
-        -- Insert into PELANGGAN only
         INSERT INTO PELANGGAN (
             id_pelanggan, 
             nama, 
@@ -61,6 +56,16 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+-- CALL user_register('Budi Santoso', '081234567890', 'password123', @result, @message, @user_id);
+-- SELECT @result, @message, @user_id;
+
+-- CALL user_register('Budi Santoso', '081234567890', 'passwordbaru', @result, @message, @user_id);
+-- SELECT @result, @message, @user_id;
+
+-- CALL user_register('Siti Aisyah', '082222222222', '', @result, @message, @user_id);
+-- SELECT @result, @message, @user_id;
+
+
 
 -- Updated Login Procedure (login with phone number instead of email)
 DELIMITER $$
