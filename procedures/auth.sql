@@ -162,6 +162,9 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+-- CALL get_user_profile('validtokenpanjangbanget1234567890', @result, @message, @user_data);
+-- SELECT @result, @message, @user_data;
+
 
 DELIMITER $$
 CREATE PROCEDURE get_user_by_token(
