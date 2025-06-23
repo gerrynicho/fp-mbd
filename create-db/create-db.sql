@@ -154,7 +154,7 @@ CREATE TABLE USER_SESSIONS (
     token VARCHAR(128) UNIQUE NOT NULL,
     id_pelanggan CHAR(5) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
+    expires_at DATETIME,
     is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (id_pelanggan) REFERENCES PELANGGAN(id_pelanggan) ON DELETE CASCADE,
     INDEX idx_token (token),
