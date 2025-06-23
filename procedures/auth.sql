@@ -64,6 +64,7 @@ DELIMITER ;
 
 -- CALL user_register('Siti Aisyah', '082222222222', '', @result, @message, @user_id);
 -- SELECT @result, @message, @user_id;
+-- NOTES: Kalau nomor handphone terdaftar maka tidak bisa
 
 
 
