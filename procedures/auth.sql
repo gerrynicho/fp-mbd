@@ -129,6 +129,9 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- CALL user_login('081234567890', 'password123', @result, @message, @token, @user_data);
+-- SELECT @result, @message, @token, @user_data;
+
 -- Updated Get User Profile (for phone-based auth)
 DELIMITER $$
 CREATE PROCEDURE get_user_profile(
