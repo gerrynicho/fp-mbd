@@ -33,10 +33,11 @@ BEGIN
     
     -- Get the highest existing transaction number for today
     -- Corrected SUBSTRING position from 16 to 12
-    SELECT COALESCE(MAX(CAST(SUBSTRING(id_transaksi, 12) AS UNSIGNED)), 0) 
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_transaksi, 10) AS UNSIGNED)), 0) 
     INTO max_num
     FROM TRANSAKSI 
     WHERE id_transaksi LIKE CONCAT(today_prefix, '%');
+    -- if retun NULL, means no transaction today, 
     
     -- Increment by 1 and format with leading zeros (4 digits)
     SET next_id = CONCAT(today_prefix, LPAD(max_num + 1, 4, '0'));
@@ -57,5 +58,42 @@ BEGIN
     ORDER BY id_transaksi DESC
     LIMIT 1;
     RETURN current_id;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION get_next_pelanggan_id()
+RETURNS CHAR(5)
+BEGIN
+    DECLARE max_num INT DEFAULT 0;
+    DECLARE next_id CHAR(5);
+    
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_pelanggan, 2) AS UNSIGNED)), 0) 
+    INTO max_num
+    FROM PELANGGAN 
+    WHERE id_pelanggan LIKE 'P%';
+    
+    SET next_id = CONCAT('P', LPAD(max_num + 1, 4, '0'));
+    
+    RETURN next_id;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION get_next_membership_id()
+RETURNS CHAR(5)
+BEGIN
+    DECLARE max_num INT DEFAULT 0;
+    DECLARE next_id CHAR(5);
+    
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_membership, 2) AS UNSIGNED)), 0) 
+    INTO max_num
+    FROM MEMBERSHIP 
+    WHERE id_membership LIKE 'M%';
+    
+    -- Increment by 1 and format with leading zeros (3 digits)
+    SET next_id = CONCAT('M', LPAD(max_num + 1, 3, '0'));
+    
+    RETURN next_id;
 END$$
 DELIMITER ;

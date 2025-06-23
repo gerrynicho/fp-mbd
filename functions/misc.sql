@@ -1,20 +1,3 @@
--- #1 CEK MEMBERSHIP PELANGGAN [DONE]
-DELIMITER $$
-CREATE FUNCTION cek_membership(p_id CHAR(5))
-RETURNS BOOLEAN
-BEGIN
-    DECLARE status BOOL;
-    SELECT EXISTS (
-        SELECT 1 
-        FROM MEMBERSHIP 
-        WHERE pelanggan_id_pelanggan = p_id
-    ) INTO status;
-
-    RETURN status;
-END$$
-DELIMITER ;
--- SELECT cek_membership('P0001') AS status_membership;
--- SELECT cek_membership('P0025') AS status_membership;
 
 --  #2 CEK MASA BERLAKU MEMBERSHIP [DONE]
 DELIMITER $$

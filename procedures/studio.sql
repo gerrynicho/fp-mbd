@@ -115,3 +115,124 @@ BEGIN
       AND ls.id_lokasi_studio = p_id_lokasi;
 END$$
 DELIMITER ;
+
+-- #10 pembatalan transaksi
+
+-- #11 edit transaksi (pindah kursi atau jadwal)
+
+
+DELIMITER $$
+
+CREATE PROCEDURE detil_trx(
+    IN kursi_id CHAR(4)
+)
+BEGIN
+    DECLARE id_dt CHAR(5);
+    DECLARE trx_id CHAR(19);
+
+    -- Ambil ID baru untuk detail transaksi
+    SET id_dt = get_next_dt_id();
+    SET trx_id = get_current_trx_id();
+    
+    INSERT INTO DETAIL_TRANSAKSI (
+        id_detail_transaksi,
+        transaksi_id_transaksi,
+        kursi_id_kursi
+    ) VALUES (
+        id_dt,
+        trx_id,
+        kursi_id
+    );
+END$$
+
+DELIMITER ;
+-- SET @trx_id = get_next_trx_id();
+-- CALL detil_trx('K001');
+
+DELIMITER $$
+CREATE PROCEDURE dummy_transaksi()
+BEGIN
+    INSERT INTO TRANSAKSI (
+        id_transaksi,
+        total_biaya,
+        tanggal_transaksi,
+        pelanggan_id_pelanggan,
+        jadwal_tayang_id_tayang,
+        teater_id_teater
+    ) VALUES (
+        get_next_trx_id(),
+        -1.00,
+        NOW(),
+        'P0001',
+        'J001',
+        'T001'
+    );
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE makanan_trx(
+    IN id_makanan CHAR(4),
+    IN jumlah INT,
+    IN catatan VARCHAR(100)
+)
+BEGIN
+    INSERT INTO TRANSAKSI_MAKANAN (
+        transaksi_id_transaksi,
+        makanan_id_makanan,
+        tanggal,
+        jumlah,
+        catatan
+    ) VALUES (
+        get_current_trx_id(),
+        id_makanan,
+        NOW(),
+        jumlah,
+        catatan
+    );
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE promo_trx(
+    IN id_promosi CHAR(10)
+)
+BEGIN
+    INSERT INTO PROMOSI_TRANSAKSI (
+        transaksi_id_transaksi,
+        promosi_id_promosi
+    ) VALUES (
+        get_current_trx_id(),
+        id_promosi
+    );
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE add_trx(
+    IN pelanggan_id CHAR(5),
+    IN jadwal_id CHAR(4),
+    IN teater_id CHAR(4)
+)
+BEGIN
+    DECLARE total DECIMAL(10,2);
+    DECLARE waktu TIMESTAMP;
+
+    SET waktu = NOW();
+
+    -- Total akhir
+    SET total = calculate_transaction_total(get_current_trx_id());
+
+    -- Insert ke TRANSAKSI
+    UPDATE TRANSAKSI
+    SET
+        total_biaya = total,
+        tanggal_transaksi = waktu,
+        pelanggan_id_pelanggan = pelanggan_id,
+        jadwal_tayang_id_tayang = jadwal_id,
+        teater_id_teater = teater_id
+    WHERE id_transaksi = get_current_trx_id();
+END$$
+DELIMITER ;
+-- CALL add_trx("P0001", "J001", "T001");

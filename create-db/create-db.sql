@@ -2,7 +2,7 @@ CREATE TABLE PELANGGAN (
     id_pelanggan CHAR(5) PRIMARY KEY,
     nama VARCHAR(50) NOT NULL,
     no_telepon VARCHAR(15) NOT NULL,
-    pass VARCHAR(50) NOT NULL
+    pass VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE PROMOSI (
@@ -147,4 +147,16 @@ CREATE TABLE FILM_LOKASI_STUDIO (
    CONSTRAINT film_lokasi_studio_pk PRIMARY KEY (film_id_film, lokasi_studio_id_lokasi_studio),
    FOREIGN KEY (film_id_film) REFERENCES FILM(id_film) ON DELETE CASCADE ON UPDATE CASCADE,
    FOREIGN KEY (lokasi_studio_id_lokasi_studio) REFERENCES LOKASI_STUDIO(id_lokasi_studio) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE USER_SESSIONS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(128) UNIQUE NOT NULL,
+    id_pelanggan CHAR(5) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (id_pelanggan) REFERENCES PELANGGAN(id_pelanggan) ON DELETE CASCADE,
+    INDEX idx_token (token),
+    INDEX idx_pelanggan (id_pelanggan)
 );

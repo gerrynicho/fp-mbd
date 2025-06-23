@@ -178,10 +178,53 @@ BEGIN
     WHERE pt.transaksi_id_transaksi = transaksi_id
       AND CURDATE() BETWEEN p.tanggal_mulai AND p.tanggal_berakhir;
     
-    SET subtotal = subtotal + hitung_makanan(get_current_trx_id());
     SET total = hitung_total(subtotal, biaya_admin, diskon, transaksi_id);
     
     RETURN total;
 END$$
 DELIMITER ;
 -- SELECT calculate_transaction_total('TRX202506100001') AS total_transaction;
+
+DELIMITER $$
+CREATE FUNCTION get_next_dt_id()
+RETURNS CHAR(5)
+BEGIN
+    DECLARE max_num INT DEFAULT 0;
+    DECLARE next_id CHAR(5);
+    
+    -- Get the highest existing DT number
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_detail_transaksi, 3) AS UNSIGNED)), 0) 
+    INTO max_num
+    FROM DETAIL_TRANSAKSI 
+    WHERE id_detail_transaksi LIKE 'DT%';
+    
+    -- Increment by 1 and format with leading zeros (3 digits)
+    SET next_id = CONCAT('DT', LPAD(max_num + 1, 3, '0'));
+    
+    RETURN next_id;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION get_next_trx_id()
+RETURNS CHAR(19)
+BEGIN
+    DECLARE max_num INT DEFAULT 0;
+    DECLARE next_id CHAR(19);
+    DECLARE today_prefix CHAR(15);
+    
+    -- Create today's prefix: TRX + YYYYMMDD format
+    SET today_prefix = CONCAT('TRX', DATE_FORMAT(CURDATE(), '%Y%m%d'));
+    
+    -- Get the highest existing transaction number for today
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_transaksi, 16) AS UNSIGNED)), 0) 
+    INTO max_num
+    FROM TRANSAKSI 
+    WHERE id_transaksi LIKE CONCAT(today_prefix, '%');
+    
+    -- Increment by 1 and format with leading zeros (4 digits)
+    SET next_id = CONCAT(today_prefix, LPAD(max_num + 1, 4, '0'));
+    
+    RETURN next_id;
+END$$
+DELIMITER ;
